@@ -21,9 +21,7 @@
     --text-dim: rgba(240,244,255,0.50);
     --mono: 'SF Mono', 'Consolas', monospace;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     background: var(--sky);
     color: var(--text);
@@ -31,7 +29,39 @@
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
+    padding-bottom: 70px;
   }
+
+  /* ── 탭 바 ── */
+  #tab-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: #0d1f3c;
+    border-top: 1px solid var(--sky-border);
+    display: flex;
+    z-index: 50;
+  }
+  .tab-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 10px;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .tab-btn .tab-icon { font-size: 20px; line-height: 1; }
+  .tab-btn.active { color: var(--rain); }
+
+  /* ── 페이지 ── */
+  .page { display: none; flex-direction: column; }
+  .page.active { display: flex; }
 
   /* ── HEADER ── */
   #header {
@@ -141,6 +171,106 @@
   #thunder-section .lbl { font-size: 11px; color: var(--thunder); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; }
   #thunder-section .sub { font-size: 11px; color: var(--text-dim); }
 
+  /* ── RADAR PAGE ── */
+  #page-radar {
+    padding: 20px 20px 0;
+  }
+  .radar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .radar-title { font-size: 16px; font-weight: 700; }
+  .radar-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .radar-tab {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--sky-border);
+    background: var(--sky-card);
+    color: var(--text-dim);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .radar-tab.active {
+    background: var(--rain-dim);
+    border-color: var(--rain);
+    color: var(--rain);
+    font-weight: 700;
+  }
+  .radar-img-wrap {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--sky-border);
+    background: #000;
+    aspect-ratio: 1 / 1;
+  }
+  #radar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  #radar-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10,22,40,0.8);
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  #radar-loading.hidden { display: none; }
+  .radar-info {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #radar-time { font-size: 11px; color: var(--text-dim); font-family: var(--mono); }
+  #radar-refresh-btn {
+    padding: 6px 14px;
+    background: var(--rain-dim);
+    border: 1px solid var(--rain);
+    color: var(--rain);
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  /* 레이더 범례 */
+  .radar-legend {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: var(--sky-card);
+    border: 1px solid var(--sky-border);
+    border-radius: 12px;
+  }
+  .radar-legend-title { font-size: 10px; color: var(--text-dim); margin-bottom: 8px; letter-spacing: 0.5px; }
+  .legend-bar {
+    height: 12px;
+    border-radius: 4px;
+    background: linear-gradient(to right,
+      #a0d4ff, #4da6ff, #00c8a0, #52d98a,
+      #ffe066, #ffb84d, #ff5e5e, #cc00ff);
+    margin-bottom: 4px;
+  }
+  .legend-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+
   /* ── LOADING / ERROR ── */
   #overlay {
     position: fixed; inset: 0;
@@ -226,8 +356,8 @@
 <div id="api-prompt">
   <div style="font-size:36px">🌤️</div>
   <h2>야외 날씨 앱<br>API 키 설정</h2>
-  <p>공공데이터포털에서 발급받은<br>기상청 서비스 키(디코딩)를 입력해 주세요.<br>키는 이 기기에만 저장됩니다.</p>
-  <input id="api-key-input" type="password" placeholder="서비스 키 입력 (디코딩 키)" autocomplete="off">
+  <p>공공데이터포털에서 발급받은<br>기상청 서비스 키(일반 인증키)를 입력해 주세요.<br>키는 이 기기에만 저장됩니다.</p>
+  <input id="api-key-input" type="password" placeholder="서비스 키 입력" autocomplete="off">
   <button id="api-key-save">저장하고 시작</button>
   <a id="api-key-link" href="https://data.go.kr" target="_blank">▸ 공공데이터포털에서 키 발급받기</a>
   <p style="color:#ff5e5e;font-size:11px" id="api-key-err"></p>
@@ -241,296 +371,288 @@
   <button id="retry-btn">다시 시도</button>
 </div>
 
-<!-- MAIN UI -->
-<div id="header">
-  <div>
-    <div id="location-name">—</div>
-    <div id="update-time">—</div>
+<!-- ══ PAGE: 날씨 ══ -->
+<div id="page-weather" class="page active">
+  <div id="header">
+    <div>
+      <div id="location-name">—</div>
+      <div id="update-time">—</div>
+    </div>
+    <button id="refresh-btn" title="새로고침">↻</button>
   </div>
-  <button id="refresh-btn" title="새로고침">↻</button>
+
+  <div id="condition-banner" class="safe">
+    <div id="condition-icon">⛅</div>
+    <div>
+      <div id="condition-label">—</div>
+      <div id="condition-sub">—</div>
+    </div>
+  </div>
+
+  <div id="metrics">
+    <div class="metric-card" id="card-rain">
+      <div class="metric-label">강수</div>
+      <div class="metric-value" id="m-pty">—</div>
+      <div class="metric-unit">형태</div>
+    </div>
+    <div class="metric-card" id="card-rn1">
+      <div class="metric-label">1h 강수량</div>
+      <div class="metric-value" id="m-rn1">—</div>
+      <div class="metric-unit">mm</div>
+    </div>
+    <div class="metric-card" id="card-lgt">
+      <div class="metric-label">낙뢰</div>
+      <div class="metric-value" id="m-lgt">—</div>
+      <div class="metric-unit">수준</div>
+    </div>
+    <div class="metric-card" id="card-wsd">
+      <div class="metric-label">풍속</div>
+      <div class="metric-value" id="m-wsd">—</div>
+      <div class="metric-unit">m/s</div>
+    </div>
+  </div>
+
+  <div id="timeline-wrap">
+    <div id="timeline-title">향후 6시간</div>
+    <div id="timeline"></div>
+  </div>
+
+  <div id="secondary">
+    <div class="sec-card">
+      <div class="sec-label">기온</div>
+      <div><span class="sec-val" id="s-t1h">—</span><span class="sec-unit"> ℃</span></div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-label">습도</div>
+      <div><span class="sec-val" id="s-reh">—</span><span class="sec-unit"> %</span></div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-label">동서바람</div>
+      <div><span class="sec-val" id="s-uuu">—</span><span class="sec-unit"> m/s</span></div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-label">남북바람</div>
+      <div><span class="sec-val" id="s-vvv">—</span><span class="sec-unit"> m/s</span></div>
+    </div>
+  </div>
+
+  <div id="thunder-section">
+    <div class="lbl">⚡ 낙뢰 감지됨</div>
+    <div class="sub" id="thunder-msg">현재 주변에 낙뢰가 감지되고 있습니다. 야외 활동을 즉시 중단하고 실내로 이동하세요.</div>
+  </div>
+
+  <div id="footer">기상청 초단기예보 · KMA Open API</div>
 </div>
 
-<div id="condition-banner" class="safe">
-  <div id="condition-icon">⛅</div>
-  <div>
-    <div id="condition-label">—</div>
-    <div id="condition-sub">—</div>
+<!-- ══ PAGE: 레이더 ══ -->
+<div id="page-radar" class="page">
+  <div class="radar-header">
+    <div class="radar-title">🛰️ 레이더 강수 예측</div>
+    <button id="radar-refresh-btn">↻ 갱신</button>
+  </div>
+
+  <div class="radar-tabs">
+    <button class="radar-tab active" data-type="rain">강수</button>
+    <button class="radar-tab" data-type="thunder">낙뢰</button>
+  </div>
+
+  <div class="radar-img-wrap">
+    <img id="radar-img" src="" alt="레이더 이미지">
+    <div id="radar-loading">🛰️ 이미지 불러오는 중…</div>
+  </div>
+
+  <div class="radar-info">
+    <div id="radar-time">—</div>
+  </div>
+
+  <div class="radar-legend">
+    <div class="radar-legend-title">강수강도 (mm/h)</div>
+    <div class="legend-bar"></div>
+    <div class="legend-labels">
+      <span>약함</span>
+      <span>보통</span>
+      <span>강함</span>
+      <span>매우강함</span>
+    </div>
   </div>
 </div>
 
-<div id="metrics">
-  <div class="metric-card" id="card-rain">
-    <div class="metric-label">강수</div>
-    <div class="metric-value" id="m-pty">—</div>
-    <div class="metric-unit">형태</div>
-  </div>
-  <div class="metric-card" id="card-rn1">
-    <div class="metric-label">1h 강수량</div>
-    <div class="metric-value" id="m-rn1">—</div>
-    <div class="metric-unit">mm</div>
-  </div>
-  <div class="metric-card" id="card-lgt">
-    <div class="metric-label">낙뢰</div>
-    <div class="metric-value" id="m-lgt">—</div>
-    <div class="metric-unit">수준</div>
-  </div>
-  <div class="metric-card" id="card-wsd">
-    <div class="metric-label">풍속</div>
-    <div class="metric-value" id="m-wsd">—</div>
-    <div class="metric-unit">m/s</div>
-  </div>
+<!-- ══ 탭 바 ══ -->
+<div id="tab-bar">
+  <button class="tab-btn active" data-page="page-weather">
+    <span class="tab-icon">🌤️</span>
+    <span>날씨</span>
+  </button>
+  <button class="tab-btn" data-page="page-radar">
+    <span class="tab-icon">🛰️</span>
+    <span>레이더</span>
+  </button>
 </div>
-
-<div id="timeline-wrap">
-  <div id="timeline-title">향후 6시간</div>
-  <div id="timeline">
-    <!-- JS가 채움 -->
-  </div>
-</div>
-
-<div id="secondary">
-  <div class="sec-card">
-    <div class="sec-label">기온</div>
-    <div><span class="sec-val" id="s-t1h">—</span><span class="sec-unit"> ℃</span></div>
-  </div>
-  <div class="sec-card">
-    <div class="sec-label">습도</div>
-    <div><span class="sec-val" id="s-reh">—</span><span class="sec-unit"> %</span></div>
-  </div>
-  <div class="sec-card">
-    <div class="sec-label">동서바람</div>
-    <div><span class="sec-val" id="s-uuu">—</span><span class="sec-unit"> m/s</span></div>
-  </div>
-  <div class="sec-card">
-    <div class="sec-label">남북바람</div>
-    <div><span class="sec-val" id="s-vvv">—</span><span class="sec-unit"> m/s</span></div>
-  </div>
-</div>
-
-<div id="thunder-section">
-  <div class="lbl">⚡ 낙뢰 감지됨</div>
-  <div class="sub" id="thunder-msg">현재 주변에 낙뢰가 감지되고 있습니다. 야외 활동을 즉시 중단하고 실내로 이동하세요.</div>
-</div>
-
-<div id="footer">기상청 초단기예보 · KMA Open API</div>
 
 <script>
 /* ═══════════════════════════════════════════════
-   Lambert 격자 ↔ 위경도 변환 (기상청 공식 알고리즘)
+   Lambert 격자 변환
 ═══════════════════════════════════════════════ */
 function latLonToGrid(lat, lon) {
-  const RE = 6371.00877, GRID = 5.0;
-  const SLAT1 = 30.0, SLAT2 = 60.0, OLON = 126.0, OLAT = 38.0;
-  const XO = 43, YO = 136;
-  const DEGRAD = Math.PI / 180.0;
-  const re = RE / GRID;
-  const slat1 = SLAT1 * DEGRAD, slat2 = SLAT2 * DEGRAD;
-  const olon = OLON * DEGRAD, olat = OLAT * DEGRAD;
-  let sn = Math.tan(Math.PI * 0.25 + slat2 * 0.5) / Math.tan(Math.PI * 0.25 + slat1 * 0.5);
-  sn = Math.log(Math.cos(slat1) / Math.cos(slat2)) / Math.log(sn);
-  let sf = Math.tan(Math.PI * 0.25 + slat1 * 0.5);
-  sf = Math.pow(sf, sn) * Math.cos(slat1) / sn;
-  let ro = Math.tan(Math.PI * 0.25 + olat * 0.5);
-  ro = re * sf / Math.pow(ro, sn);
-  let ra = Math.tan(Math.PI * 0.25 + lat * DEGRAD * 0.5);
-  ra = re * sf / Math.pow(ra, sn);
-  let theta = lon * DEGRAD - olon;
-  if (theta > Math.PI) theta -= 2.0 * Math.PI;
-  if (theta < -Math.PI) theta += 2.0 * Math.PI;
-  theta *= sn;
-  const nx = Math.floor(ra * Math.sin(theta) + XO + 0.5);
-  const ny = Math.floor(ro - ra * Math.cos(theta) + YO + 0.5);
-  return { nx, ny };
+  const RE=6371.00877,GRID=5.0,SLAT1=30.0,SLAT2=60.0,OLON=126.0,OLAT=38.0,XO=43,YO=136;
+  const DEGRAD=Math.PI/180.0;
+  const re=RE/GRID;
+  const slat1=SLAT1*DEGRAD,slat2=SLAT2*DEGRAD,olon=OLON*DEGRAD,olat=OLAT*DEGRAD;
+  let sn=Math.tan(Math.PI*0.25+slat2*0.5)/Math.tan(Math.PI*0.25+slat1*0.5);
+  sn=Math.log(Math.cos(slat1)/Math.cos(slat2))/Math.log(sn);
+  let sf=Math.tan(Math.PI*0.25+slat1*0.5);
+  sf=Math.pow(sf,sn)*Math.cos(slat1)/sn;
+  let ro=Math.tan(Math.PI*0.25+olat*0.5);
+  ro=re*sf/Math.pow(ro,sn);
+  let ra=Math.tan(Math.PI*0.25+lat*DEGRAD*0.5);
+  ra=re*sf/Math.pow(ra,sn);
+  let theta=lon*DEGRAD-olon;
+  if(theta>Math.PI)theta-=2.0*Math.PI;
+  if(theta<-Math.PI)theta+=2.0*Math.PI;
+  theta*=sn;
+  return{nx:Math.floor(ra*Math.sin(theta)+XO+0.5),ny:Math.floor(ro-ra*Math.cos(theta)+YO+0.5)};
 }
 
 /* ═══════════════════════════════════════════════
-   base_time 계산: 초단기예보 기준 (매시 30분, 45분 후 제공)
+   base_time 계산
 ═══════════════════════════════════════════════ */
-function getBaseDateTime(offsetMin = 55) {
-  const now = new Date();
-  const d = new Date(now.getTime() - offsetMin * 60 * 1000);
-  const pad = n => String(n).padStart(2,'0');
-  const base_date = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
-  const h = d.getHours();
-  // 초단기예보 base_time: 해당 시각의 HH30
-  const base_time = `${pad(h)}30`;
-  return { base_date, base_time };
+function getBaseDateTime(offsetMin=55){
+  const d=new Date(new Date().getTime()-offsetMin*60*1000);
+  const pad=n=>String(n).padStart(2,'0');
+  return{
+    base_date:`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`,
+    base_time:`${pad(d.getHours())}30`
+  };
 }
 
 /* ═══════════════════════════════════════════════
-   강수형태 / 하늘상태 코드 → 텍스트/아이콘
+   코드 변환
 ═══════════════════════════════════════════════ */
-const PTY_LABEL = { '0':'없음','1':'비','2':'비/눈','3':'눈','4':'소나기','5':'빗방울','6':'빗방울/눈날림','7':'눈날림' };
-const PTY_ICON  = { '0':'✓','1':'🌧','2':'🌨','3':'❄️','4':'⛈','5':'🌦','6':'🌨','7':'🌨' };
-const SKY_ICON  = { '1':'☀️','3':'⛅','4':'☁️' };
+const PTY_LABEL={'0':'없음','1':'비','2':'비/눈','3':'눈','4':'소나기','5':'빗방울','6':'빗방울/눈','7':'눈날림'};
+const PTY_ICON={'0':'✓','1':'🌧','2':'🌨','3':'❄️','4':'⛈','5':'🌦','6':'🌨','7':'🌨'};
+const SKY_ICON={'1':'☀️','3':'⛅','4':'☁️'};
+function getPtyLabel(v){return PTY_LABEL[v]||'—';}
+function getWeatherIcon(pty,sky){if(pty&&pty!=='0')return PTY_ICON[pty]||'🌧';return SKY_ICON[sky]||'🌤';}
+function getRainBarColor(pty){if(!pty||pty==='0')return'rgba(255,255,255,0.15)';if(['4','1'].includes(pty))return'#4da6ff';if(['2','5','6'].includes(pty))return'#7ef7c8';return'#b8d4ff';}
 
-function getPtyLabel(v) { return PTY_LABEL[v] || '—'; }
-function getWeatherIcon(pty, sky) {
-  if (pty && pty !== '0') return PTY_ICON[pty] || '🌧';
-  return SKY_ICON[sky] || '🌤';
-}
-
-function getRainBarColor(pty) {
-  if (!pty || pty === '0') return 'rgba(255,255,255,0.15)';
-  if (['4','1'].includes(pty)) return '#4da6ff';
-  if (['2','5','6'].includes(pty)) return '#7ef7c8';
-  if (['3','7'].includes(pty)) return '#b8d4ff';
-  return '#4da6ff';
-}
-
-/* ═══════════════════════════════════════════════
-   야외 위험도 판단
-═══════════════════════════════════════════════ */
-function getCondition(items) {
-  const get = cat => (items.find(i => i.category === cat) || {}).fcstValue || '0';
-  const pty = get('PTY'), lgt = get('LGT'), wsd = parseFloat(get('WSD') || 0);
-  const rn1 = get('RN1');
-  const rn1val = rn1 === '강수없음' ? 0 : parseFloat(rn1) || 0;
-
-  if (lgt !== '0') return { level:'danger', label:'⚡ 낙뢰 위험', sub:'즉시 실내 대피 권고', lgt:true };
-  if (pty === '4' || rn1val >= 10) return { level:'danger', label:'🌧 폭우 주의', sub:'야외활동 위험 수준', lgt:false };
-  if (['1','2','5'].includes(pty) || rn1val >= 1) return { level:'warn', label:'🌦 비 주의', sub:'우산 필요 / 미끄럼 주의', lgt:false };
-  if (['3','7'].includes(pty)) return { level:'warn', label:'❄️ 눈/결빙 주의', sub:'미끄러운 노면 주의', lgt:false };
-  if (wsd >= 10) return { level:'warn', label:'💨 강풍 주의', sub:'바람이 매우 강합니다', lgt:false };
-  return { level:'safe', label:'✓ 야외활동 적합', sub:'현재 기상 양호', lgt:false };
+function getCondition(items){
+  const get=cat=>(items.find(i=>i.category===cat)||{}).fcstValue||'0';
+  const pty=get('PTY'),lgt=get('LGT'),wsd=parseFloat(get('WSD')||0);
+  const rn1=get('RN1');
+  const rn1val=rn1==='강수없음'?0:parseFloat(rn1)||0;
+  if(lgt!=='0')return{level:'danger',label:'⚡ 낙뢰 위험',sub:'즉시 실내 대피 권고',lgt:true};
+  if(pty==='4'||rn1val>=10)return{level:'danger',label:'🌧 폭우 주의',sub:'야외활동 위험 수준',lgt:false};
+  if(['1','2','5'].includes(pty)||rn1val>=1)return{level:'warn',label:'🌦 비 주의',sub:'우산 필요 / 미끄럼 주의',lgt:false};
+  if(['3','7'].includes(pty))return{level:'warn',label:'❄️ 눈/결빙 주의',sub:'미끄러운 노면 주의',lgt:false};
+  if(wsd>=10)return{level:'warn',label:'💨 강풍 주의',sub:'바람이 매우 강합니다',lgt:false};
+  return{level:'safe',label:'✓ 야외활동 적합',sub:'현재 기상 양호',lgt:false};
 }
 
 /* ═══════════════════════════════════════════════
-   Geocoding 역주소 (nominatim)
+   역지오코딩
 ═══════════════════════════════════════════════ */
-async function reverseGeocode(lat, lon) {
-  try {
-    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=ko`, { headers:{ 'Accept-Language':'ko' } });
-    const d = await r.json();
-    const a = d.address || {};
-    return a.city_district || a.suburb || a.village || a.town || a.city || a.county || '현재 위치';
-  } catch { return '현재 위치'; }
+async function reverseGeocode(lat,lon){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,{headers:{'Accept-Language':'ko'}});
+    const d=await r.json();
+    const a=d.address||{};
+    return a.city_district||a.suburb||a.village||a.town||a.city||a.county||'현재 위치';
+  }catch{return'현재 위치';}
 }
 
 /* ═══════════════════════════════════════════════
-   CORS 프록시 선택 (순서대로 fallback)
+   CORS 프록시
 ═══════════════════════════════════════════════ */
-const PROXIES = [
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+const PROXIES=[
+  url=>`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url=>`https://corsproxy.io/?${encodeURIComponent(url)}`,
 ];
-
-async function fetchWithProxy(rawUrl) {
+async function fetchWithProxy(rawUrl){
   let lastErr;
-  for (const proxy of PROXIES) {
-    try {
-      const r = await fetch(proxy(rawUrl), { signal: AbortSignal.timeout(8000) });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  for(const proxy of PROXIES){
+    try{
+      const r=await fetch(proxy(rawUrl),{signal:AbortSignal.timeout(8000)});
+      if(!r.ok)throw new Error(`HTTP ${r.status}`);
       return await r.json();
-    } catch(e) { lastErr = e; }
+    }catch(e){lastErr=e;}
   }
   throw lastErr;
 }
 
 /* ═══════════════════════════════════════════════
-   실제 API 호출
+   API 호출
 ═══════════════════════════════════════════════ */
-async function fetchForecast(nx, ny, apiKey) {
-  const { base_date, base_time } = getBaseDateTime(55);
-  const base = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst`
-    + `?serviceKey=${encodeURIComponent(apiKey)}&numOfRows=300&pageNo=1&dataType=JSON`
-    + `&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
-  const data = await fetchWithProxy(base);
-  if (data.response?.header?.resultCode !== '00') {
-    const msg = data.response?.header?.resultMsg || 'API 오류';
-    throw new Error(msg);
+async function fetchForecast(nx,ny,apiKey){
+  const{base_date,base_time}=getBaseDateTime(55);
+  const base=`https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst`
+    +`?serviceKey=${encodeURIComponent(apiKey)}&numOfRows=300&pageNo=1&dataType=JSON`
+    +`&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
+  const data=await fetchWithProxy(base);
+  if(data.response?.header?.resultCode!=='00'){
+    throw new Error(data.response?.header?.resultMsg||'API 오류');
   }
   return data.response.body.items.item;
 }
 
 /* ═══════════════════════════════════════════════
-   UI 업데이트
+   UI 렌더
 ═══════════════════════════════════════════════ */
-function renderUI(items, locationName) {
-  const now = new Date();
-  const pad = n => String(n).padStart(2,'0');
-  document.getElementById('location-name').textContent = locationName;
-  document.getElementById('update-time').textContent =
+function renderUI(items,locationName){
+  const now=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  document.getElementById('location-name').textContent=locationName;
+  document.getElementById('update-time').textContent=
     `${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())} 기준`;
-
-  // 현재 시각에 가장 가까운 slot 추출
-  const nowHHMM = `${pad(now.getHours())}00`;
-  // fcstTime별 그룹화
-  const byTime = {};
-  for (const item of items) {
-    const key = item.fcstDate + item.fcstTime;
-    if (!byTime[key]) byTime[key] = {};
-    byTime[key][item.category] = item.fcstValue;
+  const nowHHMM=`${pad(now.getHours())}00`;
+  const byTime={};
+  for(const item of items){
+    const key=item.fcstDate+item.fcstTime;
+    if(!byTime[key])byTime[key]={};
+    byTime[key][item.category]=item.fcstValue;
   }
-  const times = Object.keys(byTime).sort();
-  const currentKey = times.find(k => k >= `${items[0]?.fcstDate}${nowHHMM}`) || times[0];
-  const cur = byTime[currentKey] || {};
+  const times=Object.keys(byTime).sort();
+  const currentKey=times.find(k=>k>=`${items[0]?.fcstDate}${nowHHMM}`)||times[0];
+  const cur=byTime[currentKey]||{};
 
-  // ── 조건 배너
-  const cond = getCondition(Object.entries(cur).map(([category,fcstValue]) => ({ category, fcstValue })));
-  const banner = document.getElementById('condition-banner');
-  banner.className = `condition-banner ${cond.level}`;
-  document.getElementById('condition-icon').textContent =
-    getWeatherIcon(cur['PTY'], cur['SKY']);
-  document.getElementById('condition-label').textContent = cond.label;
-  document.getElementById('condition-sub').textContent = cond.sub;
+  const cond=getCondition(Object.entries(cur).map(([category,fcstValue])=>({category,fcstValue})));
+  const banner=document.getElementById('condition-banner');
+  banner.className=`condition-banner ${cond.level}`;
+  document.getElementById('condition-icon').textContent=getWeatherIcon(cur['PTY'],cur['SKY']);
+  document.getElementById('condition-label').textContent=cond.label;
+  document.getElementById('condition-sub').textContent=cond.sub;
 
-  // ── 핵심 지표
-  const pty = cur['PTY'] || '0';
-  const rn1 = cur['RN1'] || '강수없음';
-  const lgt = cur['LGT'] || '0';
-  const wsd = cur['WSD'] || '—';
+  const pty=cur['PTY']||'0',rn1=cur['RN1']||'강수없음',lgt=cur['LGT']||'0',wsd=cur['WSD']||'—';
+  document.getElementById('m-pty').textContent=getPtyLabel(pty);
+  document.getElementById('m-rn1').textContent=rn1==='강수없음'?'0':rn1;
+  document.getElementById('m-lgt').textContent=lgt==='0'?'없음':'⚡감지';
+  document.getElementById('m-wsd').textContent=wsd;
+  document.getElementById('card-lgt').className=`metric-card${lgt!=='0'?' thunder-alert':''}`;
+  document.getElementById('card-wsd').className=`metric-card${parseFloat(wsd)>=10?' wind-alert':''}`;
+  document.getElementById('card-rain').className=`metric-card${pty!=='0'?' rain-alert':''}`;
+  document.getElementById('thunder-section').className=lgt!=='0'?'visible':'';
+  document.getElementById('s-t1h').textContent=cur['T1H']||'—';
+  document.getElementById('s-reh').textContent=cur['REH']||'—';
+  document.getElementById('s-uuu').textContent=cur['UUU']||'—';
+  document.getElementById('s-vvv').textContent=cur['VVV']||'—';
 
-  document.getElementById('m-pty').textContent = getPtyLabel(pty);
-  document.getElementById('m-rn1').textContent = rn1 === '강수없음' ? '0' : rn1;
-  document.getElementById('m-lgt').textContent = lgt === '0' ? '없음' : '⚡감지';
-  document.getElementById('m-wsd').textContent = wsd;
-
-  const cardLgt = document.getElementById('card-lgt');
-  cardLgt.className = `metric-card${lgt !== '0' ? ' thunder-alert' : ''}`;
-  const cardWsd = document.getElementById('card-wsd');
-  const wsdNum = parseFloat(wsd);
-  cardWsd.className = `metric-card${wsdNum >= 10 ? ' wind-alert' : ''}`;
-  const cardRain = document.getElementById('card-rain');
-  cardRain.className = `metric-card${pty !== '0' ? ' rain-alert' : ''}`;
-
-  // ── 낙뢰 섹션
-  const ts = document.getElementById('thunder-section');
-  ts.className = `${lgt !== '0' ? 'visible' : ''}`;
-
-  // ── 2차 지표
-  document.getElementById('s-t1h').textContent = cur['T1H'] || '—';
-  document.getElementById('s-reh').textContent = cur['REH'] || '—';
-  document.getElementById('s-uuu').textContent = cur['UUU'] || '—';
-  document.getElementById('s-vvv').textContent = cur['VVV'] || '—';
-
-  // ── 6시간 타임라인 (현재 포함 6개)
-  const tl = document.getElementById('timeline');
-  tl.innerHTML = '';
-  const show = times.slice(times.indexOf(currentKey), times.indexOf(currentKey) + 6);
-  const maxRain = Math.max(...show.map(k => {
-    const v = byTime[k]['RN1'] || '0';
-    return v === '강수없음' ? 0 : parseFloat(v) || 0;
-  }), 1);
-
-  for (const t of show) {
-    const slot = byTime[t];
-    const hh = t.slice(8,10), mm = t.slice(10,12);
-    const timeLabel = `${hh}:${mm}`;
-    const tPty = slot['PTY'] || '0';
-    const tSky = slot['SKY'] || '1';
-    const tTemp = slot['T1H'] || '—';
-    const tRain = slot['RN1'] || '강수없음';
-    const tRainVal = tRain === '강수없음' ? 0 : parseFloat(tRain) || 0;
-    const barPct = Math.min(tRainVal / maxRain * 100, 100);
-
-    const el = document.createElement('div');
-    el.className = 'tl-slot';
-    el.innerHTML = `
-      <div class="tl-time">${timeLabel}</div>
-      <div class="tl-icon">${getWeatherIcon(tPty, tSky)}</div>
+  const tl=document.getElementById('timeline');
+  tl.innerHTML='';
+  const show=times.slice(times.indexOf(currentKey),times.indexOf(currentKey)+6);
+  const maxRain=Math.max(...show.map(k=>{const v=byTime[k]['RN1']||'0';return v==='강수없음'?0:parseFloat(v)||0;}),1);
+  for(const t of show){
+    const slot=byTime[t];
+    const hh=t.slice(8,10),mm=t.slice(10,12);
+    const tPty=slot['PTY']||'0',tSky=slot['SKY']||'1',tTemp=slot['T1H']||'—';
+    const tRain=slot['RN1']||'강수없음';
+    const tRainVal=tRain==='강수없음'?0:parseFloat(tRain)||0;
+    const barPct=Math.min(tRainVal/maxRain*100,100);
+    const el=document.createElement('div');
+    el.className='tl-slot';
+    el.innerHTML=`
+      <div class="tl-time">${hh}:${mm}</div>
+      <div class="tl-icon">${getWeatherIcon(tPty,tSky)}</div>
       <div class="tl-temp">${tTemp}°</div>
-      <div class="tl-rain">${tRainVal > 0 ? tRainVal+'mm' : ''}</div>
+      <div class="tl-rain">${tRainVal>0?tRainVal+'mm':''}</div>
       <div class="tl-bar-wrap"><div class="tl-bar" style="width:${barPct}%;background:${getRainBarColor(tPty)}"></div></div>
     `;
     tl.appendChild(el);
@@ -538,84 +660,152 @@ function renderUI(items, locationName) {
 }
 
 /* ═══════════════════════════════════════════════
+   레이더 이미지
+   기상청 공개 레이더/낙뢰 이미지 URL
+═══════════════════════════════════════════════ */
+let currentRadarType = 'rain';
+
+function getRadarImageUrl(type) {
+  const now = new Date();
+  // 5분 단위 내림 (레이더는 5분 간격 갱신)
+  const min5 = Math.floor(now.getMinutes() / 5) * 5;
+  const pad = n => String(n).padStart(2,'0');
+  const ymd = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
+  const hm  = `${pad(now.getHours())}${pad(min5)}`;
+
+  if (type === 'thunder') {
+    // 낙뢰 감시 이미지
+    return `https://www.weather.go.kr/cgi-bin/w_thunder/readimg.cgi?dt=${ymd}${hm}&map_size=1&loctype=0&zoom=5&lat=36.5&lon=127.5&obs=1&fcst=0&cache=${Date.now()}`;
+  } else {
+    // 강수 레이더 (한반도 전체)
+    return `https://www.weather.go.kr/radar/getImage.do?type=HSP&time=${ymd}${hm}&size=512&cache=${Date.now()}`;
+  }
+}
+
+function updateRadarTime() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('radar-time').textContent =
+    `기준 ${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(Math.floor(now.getMinutes()/5)*5)}00`;
+}
+
+function loadRadarImage(type) {
+  const img = document.getElementById('radar-img');
+  const loading = document.getElementById('radar-loading');
+  loading.classList.remove('hidden');
+  img.style.opacity = '0.3';
+
+  // 기상청 레이더 이미지는 CORS 이슈가 있으므로 프록시 활용
+  const rawUrl = getRadarImageUrl(type);
+  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`;
+
+  const newImg = new Image();
+  newImg.onload = () => {
+    img.src = newImg.src;
+    img.style.opacity = '1';
+    loading.classList.add('hidden');
+    updateRadarTime();
+  };
+  newImg.onerror = () => {
+    // 프록시 실패 시 직접 URL 시도
+    img.src = rawUrl;
+    img.style.opacity = '1';
+    loading.classList.add('hidden');
+    updateRadarTime();
+  };
+  newImg.src = proxyUrl;
+}
+
+/* ═══════════════════════════════════════════════
+   탭 전환
+═══════════════════════════════════════════════ */
+let radarLoaded = false;
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.page).classList.add('active');
+
+    if (btn.dataset.page === 'page-radar' && !radarLoaded) {
+      loadRadarImage(currentRadarType);
+      radarLoaded = true;
+    }
+  });
+});
+
+// 레이더 종류 탭
+document.querySelectorAll('.radar-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.radar-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentRadarType = tab.dataset.type;
+    radarLoaded = false;
+    loadRadarImage(currentRadarType);
+    radarLoaded = true;
+  });
+});
+
+document.getElementById('radar-refresh-btn').addEventListener('click', () => {
+  loadRadarImage(currentRadarType);
+});
+
+/* ═══════════════════════════════════════════════
    메인 흐름
 ═══════════════════════════════════════════════ */
-const overlay = document.getElementById('overlay');
-const overlayMsg = document.getElementById('overlay-msg');
-const overlayErr = document.getElementById('overlay-err');
-const retryBtn = document.getElementById('retry-btn');
-let apiKey = '';
+const overlay=document.getElementById('overlay');
+const overlayMsg=document.getElementById('overlay-msg');
+const overlayErr=document.getElementById('overlay-err');
+const retryBtn=document.getElementById('retry-btn');
+let apiKey='';
 
-function showOverlay(msg) {
-  overlay.classList.remove('hidden');
-  overlayMsg.textContent = msg;
-  overlayErr.style.display = 'none';
-  retryBtn.style.display = 'none';
-  document.querySelector('.loader').style.display = 'block';
-}
-function hideOverlay() { overlay.classList.add('hidden'); }
-function showError(msg) {
-  document.querySelector('.loader').style.display = 'none';
-  overlayMsg.style.display = 'none';
-  overlayErr.style.display = 'block';
-  overlayErr.textContent = msg;
-  retryBtn.style.display = 'block';
-}
+function showOverlay(msg){overlay.classList.remove('hidden');overlayMsg.textContent=msg;overlayErr.style.display='none';retryBtn.style.display='none';document.querySelector('.loader').style.display='block';}
+function hideOverlay(){overlay.classList.add('hidden');}
+function showError(msg){document.querySelector('.loader').style.display='none';overlayMsg.style.display='none';overlayErr.style.display='block';overlayErr.textContent=msg;retryBtn.style.display='block';}
 
-async function loadWeather() {
+async function loadWeather(){
   showOverlay('위치 확인 중…');
-  try {
-    const pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, { timeout:10000 })
-    );
-    const { latitude:lat, longitude:lon } = pos.coords;
+  try{
+    const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:10000}));
+    const{latitude:lat,longitude:lon}=pos.coords;
     showOverlay('날씨 데이터 불러오는 중…');
-
-    const { nx, ny } = latLonToGrid(lat, lon);
-    const [items, locationName] = await Promise.all([
-      fetchForecast(nx, ny, apiKey),
-      reverseGeocode(lat, lon)
-    ]);
-
-    renderUI(items, locationName);
+    const{nx,ny}=latLonToGrid(lat,lon);
+    const[items,locationName]=await Promise.all([fetchForecast(nx,ny,apiKey),reverseGeocode(lat,lon)]);
+    renderUI(items,locationName);
     hideOverlay();
-
-    const btn = document.getElementById('refresh-btn');
-    btn.classList.remove('spinning');
-  } catch(e) {
-    let msg = e.message || '알 수 없는 오류';
-    if (e.code === 1) msg = '위치 권한이 거부되었습니다.\n브라우저 설정에서 위치 권한을 허용해 주세요.';
-    else if (e.code === 3) msg = '위치 정보 요청 시간이 초과되었습니다.';
-    else if (msg.includes('SERVICE_KEY')) msg = 'API 키가 올바르지 않습니다.\n공공데이터포털에서 디코딩 키를 사용해 주세요.';
+    document.getElementById('refresh-btn').classList.remove('spinning');
+  }catch(e){
+    let msg=e.message||'알 수 없는 오류';
+    if(e.code===1)msg='위치 권한이 거부되었습니다.\n브라우저 설정에서 위치 권한을 허용해 주세요.';
+    else if(e.code===3)msg='위치 정보 요청 시간이 초과되었습니다.';
+    else if(msg.includes('SERVICE_KEY'))msg='API 키가 올바르지 않습니다.\n공공데이터포털 일반 인증키를 사용해 주세요.';
     showError(msg);
     document.getElementById('refresh-btn').classList.remove('spinning');
   }
 }
 
-document.getElementById('refresh-btn').addEventListener('click', () => {
+document.getElementById('refresh-btn').addEventListener('click',()=>{
   document.getElementById('refresh-btn').classList.add('spinning');
   loadWeather();
 });
-retryBtn.addEventListener('click', loadWeather);
+retryBtn.addEventListener('click',loadWeather);
 
-// API Key 저장/복원
-const KEY_STORAGE = 'kma_api_key';
-function startApp(key) {
-  apiKey = key;
-  document.getElementById('api-prompt').style.display = 'none';
+const KEY_STORAGE='kma_api_key';
+function startApp(key){
+  apiKey=key;
+  document.getElementById('api-prompt').style.display='none';
   loadWeather();
 }
-
-document.getElementById('api-key-save').addEventListener('click', () => {
-  const val = document.getElementById('api-key-input').value.trim();
-  if (!val) { document.getElementById('api-key-err').textContent = 'API 키를 입력해 주세요.'; return; }
-  localStorage.setItem(KEY_STORAGE, val);
+document.getElementById('api-key-save').addEventListener('click',()=>{
+  const val=document.getElementById('api-key-input').value.trim();
+  if(!val){document.getElementById('api-key-err').textContent='API 키를 입력해 주세요.';return;}
+  localStorage.setItem(KEY_STORAGE,val);
   startApp(val);
 });
 
-const saved = localStorage.getItem(KEY_STORAGE);
-if (saved) { startApp(saved); }
-else { document.getElementById('api-prompt').style.display = 'flex'; overlay.classList.add('hidden'); }
+const saved=localStorage.getItem(KEY_STORAGE);
+if(saved){startApp(saved);}
+else{document.getElementById('api-prompt').style.display='flex';overlay.classList.add('hidden');}
 </script>
 </body>
 </html>
