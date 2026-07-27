@@ -818,7 +818,7 @@ async function reverseGeocode(lat,lon){
 /* ═══════════════════════════════════════════════
    Cloudflare Worker URL — 여기만 수정하면 됩니다
 ═══════════════════════════════════════════════ */
-const WORKER_URL = 'https://kma-proxy.YOUR_SUBDOMAIN.workers.dev';
+const WORKER_URL = 'https://kma-proxy.kojilkojil5.workers.dev';
 
 /* ═══════════════════════════════════════════════
    API 호출 (Worker 경유)
@@ -985,6 +985,9 @@ async function loadWeather() {
     let msg = e.message || '알 수 없는 오류';
     if (e.code === 1) msg = '위치 권한이 거부되었습니다.\n브라우저 설정에서 위치 권한을 허용하거나,\n장소명을 직접 검색해 주세요.';
     else if (e.code === 3) msg = '위치 정보 요청 시간이 초과되었습니다.\n장소명을 직접 검색해 보세요.';
+    else if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+      msg = '날씨 서버에 연결하지 못했습니다.\n네트워크 상태를 확인하거나 잠시 후 다시 시도해 주세요.';
+    }
     showError(msg);
     document.getElementById('refresh-btn').classList.remove('spinning');
   }
