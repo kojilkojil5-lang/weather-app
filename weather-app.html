@@ -81,22 +81,148 @@
   #refresh-btn.spinning { animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── CONDITION BADGE ── */
-  #condition-banner {
-    margin: 16px 20px 0;
-    padding: 14px 18px;
+  #loc-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: none; border: none; padding: 0; cursor: pointer;
+    color: var(--text); text-align: left;
+  }
+  #loc-btn .caret { font-size: 11px; color: var(--text-dim); }
+
+  /* ── 장소 검색 오버레이 ── */
+  #search-overlay {
+    position: fixed; inset: 0;
+    background: var(--sky);
+    z-index: 150;
+    display: none;
+    flex-direction: column;
+    padding: 20px;
+  }
+  #search-overlay.open { display: flex; }
+  .search-top { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
+  #search-input {
+    flex: 1;
+    padding: 13px 15px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid var(--sky-border);
+    border-radius: 12px;
+    color: var(--text); font-size: 15px; outline: none;
+  }
+  #search-input:focus { border-color: var(--rain); }
+  #search-close {
+    background: none; border: none; color: var(--text-dim);
+    font-size: 22px; cursor: pointer; padding: 4px 6px;
+  }
+  .search-hint { font-size: 11px; color: var(--text-dim); margin-bottom: 14px; line-height: 1.6; }
+  .search-sec-title {
+    font-size: 10px; color: var(--text-dim); letter-spacing: 1px;
+    margin: 16px 0 8px; text-transform: uppercase;
+  }
+  .place-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 15px;
+    background: var(--sky-card);
+    border: 1px solid var(--sky-border);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .place-row:active { background: rgba(255,255,255,0.10); }
+  .place-icon { font-size: 20px; }
+  .place-name { font-size: 14px; font-weight: 600; }
+  .place-addr { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .place-body { flex: 1; min-width: 0; }
+  .place-star {
+    background: none; border: none; font-size: 17px;
+    cursor: pointer; padding: 4px; color: var(--text-dim);
+  }
+  #search-results { overflow-y: auto; flex: 1; }
+  .search-msg { font-size: 12px; color: var(--text-dim); text-align: center; padding: 24px 10px; line-height: 1.7; }
+
+  /* ── 준비물 체크리스트 ── */
+  #page-check { padding: 20px 20px 0; }
+  .check-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .check-title { font-size: 16px; font-weight: 700; }
+  #check-reset {
+    background: none; border: 1px solid var(--sky-border);
+    color: var(--text-dim); border-radius: 8px;
+    font-size: 11px; padding: 5px 11px; cursor: pointer;
+  }
+  .check-desc { font-size: 11px; color: var(--text-dim); margin-bottom: 14px; line-height: 1.6; }
+  #check-progress-wrap {
+    height: 6px; background: rgba(255,255,255,0.08);
+    border-radius: 3px; overflow: hidden; margin-bottom: 18px;
+  }
+  #check-progress { height: 100%; background: var(--safe); width: 0%; transition: width 0.35s; }
+  #check-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  }
+  .check-item {
+    background: var(--sky-card);
+    border: 1px solid var(--sky-border);
     border-radius: 14px;
+    padding: 14px 8px 12px;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    transition: opacity 0.25s, background 0.25s;
+  }
+  .check-item .ci-emoji { font-size: 30px; line-height: 1; }
+  .check-item .ci-name  { font-size: 11px; font-weight: 600; margin-top: 7px; }
+  .check-item .ci-rank  {
+    position: absolute; top: 6px; left: 8px;
+    font-size: 9px; color: var(--text-dim); font-family: var(--mono);
+  }
+  .check-item.done {
+    opacity: 0.30;
+    background: rgba(82,217,138,0.08);
+    border-color: rgba(82,217,138,0.25);
+  }
+  .check-item.done::after {
+    content: '✓';
+    position: absolute; top: 6px; right: 8px;
+    font-size: 12px; color: var(--safe); font-weight: 800;
+  }
+
+  /* ── 설정 ── */
+  #page-settings { padding: 20px 20px 0; }
+  .set-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .set-desc  { font-size: 11px; color: var(--text-dim); margin-bottom: 16px; line-height: 1.6; }
+  .mode-opt {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 18px;
+    background: var(--sky-card);
+    border: 1px solid var(--sky-border);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  .mode-opt.active { border-color: var(--rain); background: var(--rain-dim); }
+  .mode-opt .mo-icon { font-size: 26px; }
+  .mode-opt .mo-name { font-size: 15px; font-weight: 700; }
+  .mode-opt .mo-sub  { font-size: 11px; color: var(--text-dim); margin-top: 3px; line-height: 1.5; }
+  .mode-opt .mo-body { flex: 1; }
+  .mode-opt .mo-check { font-size: 16px; color: var(--rain); opacity: 0; }
+  .mode-opt.active .mo-check { opacity: 1; }
+
+  /* ── CONDITION BADGE ── */
+  /* ── 골퍼 캐릭터 카드 ── */
+  #golfer-card {
+    margin: 16px 20px 0;
+    padding: 20px;
+    border-radius: 18px;
     display: flex;
     align-items: center;
-    gap: 14px;
-    transition: background 0.5s;
+    gap: 18px;
+    transition: background 0.5s, border-color 0.5s;
   }
-  #condition-banner.safe   { background: rgba(82,217,138,0.12); border: 1px solid rgba(82,217,138,0.25); }
-  #condition-banner.warn   { background: rgba(255,184,77,0.12); border: 1px solid rgba(255,184,77,0.25); }
-  #condition-banner.danger { background: rgba(255,94,94,0.14);  border: 1px solid rgba(255,94,94,0.30); }
-  #condition-icon { font-size: 36px; line-height: 1; }
-  #condition-label { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
-  #condition-sub   { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  #golfer-card.lv1 { background: rgba(82,217,138,0.12); border: 1px solid rgba(82,217,138,0.28); }
+  #golfer-card.lv2 { background: rgba(255,184,77,0.12); border: 1px solid rgba(255,184,77,0.28); }
+  #golfer-card.lv3 { background: rgba(255,94,94,0.14);  border: 1px solid rgba(255,94,94,0.32); }
+  #golfer-svg { width: 88px; height: 88px; flex-shrink: 0; }
+  #golfer-text { flex: 1; }
+  #golfer-label { font-size: 21px; font-weight: 800; letter-spacing: -0.6px; line-height: 1.2; }
+  #golfer-sub   { font-size: 12px; color: var(--text-dim); margin-top: 5px; line-height: 1.5; }
+  #golfer-rain  { font-size: 11px; margin-top: 7px; font-family: var(--mono); color: var(--text-dim); }
 
   /* ── KEY METRICS ── */
   #metrics {
@@ -300,21 +426,35 @@
   <button id="retry-btn">다시 시도</button>
 </div>
 
+<!-- ══ 장소 검색 오버레이 ══ -->
+<div id="search-overlay">
+  <div class="search-top">
+    <input id="search-input" type="search" placeholder="골프장·지역명 검색" autocomplete="off">
+    <button id="search-close">✕</button>
+  </div>
+  <div class="search-hint">예) 이스트밸리, 남서울CC, 곤지암읍</div>
+  <div id="search-results"></div>
+</div>
+
 <!-- ══ PAGE: 날씨 ══ -->
 <div id="page-weather" class="page active">
   <div id="header">
     <div>
-      <div id="location-name">—</div>
+      <button id="loc-btn">
+        <span id="location-name">—</span>
+        <span class="caret">▾</span>
+      </button>
       <div id="update-time">—</div>
     </div>
     <button id="refresh-btn" title="새로고침">↻</button>
   </div>
 
-  <div id="condition-banner" class="safe">
-    <div id="condition-icon">⛅</div>
-    <div>
-      <div id="condition-label">—</div>
-      <div id="condition-sub">—</div>
+  <div id="golfer-card" class="lv1">
+    <div id="golfer-svg"></div>
+    <div id="golfer-text">
+      <div id="golfer-label">—</div>
+      <div id="golfer-sub">—</div>
+      <div id="golfer-rain"></div>
     </div>
   </div>
 
@@ -342,7 +482,7 @@
   </div>
 
   <div id="timeline-wrap">
-    <div id="timeline-title">향후 6시간</div>
+    <div id="timeline-title">향후 6시간 · 라운드 컨디션</div>
     <div id="timeline"></div>
   </div>
 
@@ -370,7 +510,11 @@
     <div class="sub" id="thunder-msg">현재 주변에 낙뢰가 감지되고 있습니다. 야외 활동을 즉시 중단하고 실내로 이동하세요.</div>
   </div>
 
-  <div id="footer">기상청 초단기예보 · KMA Open API</div>
+  <div id="footer">
+    ※ 라운드 가능 여부는 코스 배수 상태·관리 방침에 따라 다를 수 있습니다.<br>
+    실제 운영 여부는 해당 골프장에 문의하세요.<br><br>
+    기상청 초단기예보 · KMA Open API
+  </div>
 </div>
 
 <!-- ══ PAGE: 레이더 ══ -->
@@ -410,14 +554,57 @@
 </div>
 
 <!-- ══ 탭 바 ══ -->
+<!-- ══ PAGE: 준비물 ══ -->
+<div id="page-check" class="page">
+  <div class="check-head">
+    <div class="check-title">🎒 라운드 준비물</div>
+    <button id="check-reset">전체 해제</button>
+  </div>
+  <div class="check-desc">골퍼들이 자주 깜빡하는 순서대로 정렬했습니다. 챙긴 항목을 눌러 지우세요.</div>
+  <div id="check-progress-wrap"><div id="check-progress"></div></div>
+  <div id="check-grid"></div>
+</div>
+
+<!-- ══ PAGE: 설정 ══ -->
+<div id="page-settings" class="page">
+  <div class="set-title">⚙️ 모드 설정</div>
+  <div class="set-desc">용도에 맞게 화면 구성을 바꿉니다.</div>
+
+  <div class="mode-opt active" data-mode="golf">
+    <div class="mo-icon">⛳</div>
+    <div class="mo-body">
+      <div class="mo-name">골프 모드</div>
+      <div class="mo-sub">라운드 컨디션 캐릭터 · 준비물 체크리스트 포함</div>
+    </div>
+    <div class="mo-check">●</div>
+  </div>
+
+  <div class="mode-opt" data-mode="normal">
+    <div class="mo-icon">🌤️</div>
+    <div class="mo-body">
+      <div class="mo-name">일반 모드</div>
+      <div class="mo-sub">일반 야외활동 기준 · 준비물 탭 숨김</div>
+    </div>
+    <div class="mo-check">●</div>
+  </div>
+</div>
+
 <div id="tab-bar">
   <button class="tab-btn active" data-page="page-weather">
     <span class="tab-icon">🌤️</span>
     <span>날씨</span>
   </button>
+  <button class="tab-btn" id="tab-check" data-page="page-check">
+    <span class="tab-icon">🎒</span>
+    <span>준비물</span>
+  </button>
   <button class="tab-btn" data-page="page-radar">
     <span class="tab-icon">🛰️</span>
     <span>레이더</span>
+  </button>
+  <button class="tab-btn" data-page="page-settings">
+    <span class="tab-icon">⚙️</span>
+    <span>설정</span>
   </button>
 </div>
 
@@ -467,17 +654,153 @@ function getPtyLabel(v){return PTY_LABEL[v]||'—';}
 function getWeatherIcon(pty,sky){if(pty&&pty!=='0')return PTY_ICON[pty]||'🌧';return SKY_ICON[sky]||'🌤';}
 function getRainBarColor(pty){if(!pty||pty==='0')return'rgba(255,255,255,0.15)';if(['4','1'].includes(pty))return'#4da6ff';if(['2','5','6'].includes(pty))return'#7ef7c8';return'#b8d4ff';}
 
-function getCondition(items){
-  const get=cat=>(items.find(i=>i.category===cat)||{}).fcstValue||'0';
-  const pty=get('PTY'),lgt=get('LGT'),wsd=parseFloat(get('WSD')||0);
-  const rn1=get('RN1');
-  const rn1val=rn1==='강수없음'?0:parseFloat(rn1)||0;
-  if(lgt!=='0')return{level:'danger',label:'⚡ 낙뢰 위험',sub:'즉시 실내 대피 권고',lgt:true};
-  if(pty==='4'||rn1val>=10)return{level:'danger',label:'🌧 폭우 주의',sub:'야외활동 위험 수준',lgt:false};
-  if(['1','2','5'].includes(pty)||rn1val>=1)return{level:'warn',label:'🌦 비 주의',sub:'우산 필요 / 미끄럼 주의',lgt:false};
-  if(['3','7'].includes(pty))return{level:'warn',label:'❄️ 눈/결빙 주의',sub:'미끄러운 노면 주의',lgt:false};
-  if(wsd>=10)return{level:'warn',label:'💨 강풍 주의',sub:'바람이 매우 강합니다',lgt:false};
-  return{level:'safe',label:'✓ 야외활동 적합',sub:'현재 기상 양호',lgt:false};
+/* ═══════════════════════════════════════════════
+   골퍼 캐릭터 SVG (3단계)
+═══════════════════════════════════════════════ */
+const GOLFER_SVG = {
+  // Lv1 — 웃으며 피니시 자세
+  lv1: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" r="46" fill="rgba(82,217,138,0.10)"/>
+    <!-- 클럽 (피니시로 넘어간 상태) -->
+    <line x1="52" y1="52" x2="26" y2="22" stroke="#cfd8e8" stroke-width="3" stroke-linecap="round"/>
+    <!-- 몸통 (회전된 피니시) -->
+    <path d="M50 52 L50 72" stroke="#f0f4ff" stroke-width="7" stroke-linecap="round"/>
+    <!-- 팔 -->
+    <path d="M50 56 L38 46" stroke="#f0f4ff" stroke-width="5" stroke-linecap="round"/>
+    <!-- 다리 (피니시: 오른발 세움) -->
+    <path d="M50 72 L42 88" stroke="#f0f4ff" stroke-width="6" stroke-linecap="round"/>
+    <path d="M50 72 L60 84 L64 88" stroke="#f0f4ff" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <!-- 머리 -->
+    <circle cx="52" cy="40" r="11" fill="#f0f4ff"/>
+    <!-- 모자 챙 -->
+    <path d="M41 36 Q52 27 63 36" stroke="#52d98a" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <!-- 웃는 눈 (^ ^) -->
+    <path d="M46 40 Q48 37.5 50 40" stroke="#0a1628" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M55 40 Q57 37.5 59 40" stroke="#0a1628" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <!-- 활짝 웃는 입 -->
+    <path d="M48 45 Q52.5 49 57 45" stroke="#0a1628" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  </svg>`,
+
+  // Lv2 — 약간 시무룩, 우산 든 자세
+  lv2: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" r="46" fill="rgba(255,184,77,0.10)"/>
+    <!-- 빗방울 -->
+    <line x1="22" y1="20" x2="20" y2="27" stroke="#4da6ff" stroke-width="2.2" stroke-linecap="round" opacity="0.75"/>
+    <line x1="34" y1="15" x2="32" y2="22" stroke="#4da6ff" stroke-width="2.2" stroke-linecap="round" opacity="0.75"/>
+    <line x1="72" y1="18" x2="70" y2="25" stroke="#4da6ff" stroke-width="2.2" stroke-linecap="round" opacity="0.75"/>
+    <!-- 우산 -->
+    <path d="M28 34 Q46 18 64 34 Z" fill="#ffb84d" opacity="0.9"/>
+    <line x1="46" y1="34" x2="46" y2="56" stroke="#cfd8e8" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- 몸통 -->
+    <path d="M54 54 L54 72" stroke="#f0f4ff" stroke-width="7" stroke-linecap="round"/>
+    <!-- 우산 든 팔 -->
+    <path d="M54 57 L46 54" stroke="#f0f4ff" stroke-width="5" stroke-linecap="round"/>
+    <!-- 다리 -->
+    <path d="M54 72 L47 88" stroke="#f0f4ff" stroke-width="6" stroke-linecap="round"/>
+    <path d="M54 72 L61 88" stroke="#f0f4ff" stroke-width="6" stroke-linecap="round"/>
+    <!-- 머리 -->
+    <circle cx="54" cy="43" r="11" fill="#f0f4ff"/>
+    <!-- 모자 챙 -->
+    <path d="M43 39 Q54 30 65 39" stroke="#ffb84d" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <!-- 시무룩한 눈 -->
+    <circle cx="50" cy="43" r="1.6" fill="#0a1628"/>
+    <circle cx="58" cy="43" r="1.6" fill="#0a1628"/>
+    <!-- 살짝 처진 입 -->
+    <path d="M50 49 Q54 46.5 58 49" stroke="#0a1628" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  </svg>`,
+
+  // Lv3 — 우는 표정, 클럽 내려놓음
+  lv3: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" r="46" fill="rgba(255,94,94,0.10)"/>
+    <!-- 굵은 빗줄기 -->
+    <line x1="18" y1="12" x2="14" y2="26" stroke="#4da6ff" stroke-width="2.8" stroke-linecap="round" opacity="0.85"/>
+    <line x1="32" y1="8"  x2="28" y2="22" stroke="#4da6ff" stroke-width="2.8" stroke-linecap="round" opacity="0.85"/>
+    <line x1="50" y1="10" x2="46" y2="24" stroke="#4da6ff" stroke-width="2.8" stroke-linecap="round" opacity="0.85"/>
+    <line x1="68" y1="8"  x2="64" y2="22" stroke="#4da6ff" stroke-width="2.8" stroke-linecap="round" opacity="0.85"/>
+    <line x1="82" y1="12" x2="78" y2="26" stroke="#4da6ff" stroke-width="2.8" stroke-linecap="round" opacity="0.85"/>
+    <!-- 땅에 내려놓은 클럽 -->
+    <line x1="20" y1="86" x2="42" y2="82" stroke="#8794ab" stroke-width="3" stroke-linecap="round"/>
+    <!-- 축 처진 몸통 -->
+    <path d="M56 56 L56 74" stroke="#f0f4ff" stroke-width="7" stroke-linecap="round"/>
+    <!-- 축 늘어진 팔 -->
+    <path d="M56 59 L48 68" stroke="#f0f4ff" stroke-width="5" stroke-linecap="round"/>
+    <path d="M56 59 L64 68" stroke="#f0f4ff" stroke-width="5" stroke-linecap="round"/>
+    <!-- 다리 -->
+    <path d="M56 74 L49 89" stroke="#f0f4ff" stroke-width="6" stroke-linecap="round"/>
+    <path d="M56 74 L63 89" stroke="#f0f4ff" stroke-width="6" stroke-linecap="round"/>
+    <!-- 고개 숙인 머리 -->
+    <circle cx="56" cy="45" r="11" fill="#f0f4ff"/>
+    <!-- 모자 챙 -->
+    <path d="M45 42 Q56 33 67 42" stroke="#ff5e5e" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <!-- 우는 눈 (> <) -->
+    <path d="M50 44 Q52.5 46.5 55 44" stroke="#0a1628" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M58 44 Q60.5 46.5 63 44" stroke="#0a1628" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <!-- 눈물 -->
+    <circle cx="51" cy="49" r="1.6" fill="#4da6ff"/>
+    <circle cx="62" cy="49" r="1.6" fill="#4da6ff"/>
+    <!-- 우는 입 -->
+    <path d="M52 52 Q56.5 48 61 52" stroke="#0a1628" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  </svg>`
+};
+
+/* ═══════════════════════════════════════════════
+   골프 라운드 판정 — 3단계
+   ※ 코스 상태·배수 여건에 따라 실제와 다를 수 있음
+═══════════════════════════════════════════════ */
+function getGolfCondition(cur) {
+  const pty    = cur['PTY'] || '0';
+  const lgt    = cur['LGT'] || '0';
+  const wsd    = parseFloat(cur['WSD'] || 0);
+  const rn1raw = cur['RN1'] || '강수없음';
+  const rain   = rn1raw === '강수없음' ? 0 : parseFloat(rn1raw) || 0;
+
+  // 낙뢰는 강수량과 무관하게 최우선
+  const golf = (typeof appMode === 'undefined') || appMode === 'golf';
+
+  if (lgt !== '0') {
+    return {
+      lv: 'lv3',
+      label: '⚡ 즉시 중단',
+      sub: golf ? '낙뢰 감지 — 클럽하우스로 대피하세요'
+                : '낙뢰 감지 — 즉시 실내로 대피하세요',
+      rain
+    };
+  }
+
+  // 강수량 3단계
+  if (rain >= 5 || pty === '4') {
+    return {
+      lv: 'lv3',
+      label: golf ? '라운드 어려움' : '야외활동 어려움',
+      sub: golf ? '강한 비가 예상됩니다. 코스 상태를 확인하세요'
+                : '강한 비가 예상됩니다',
+      rain
+    };
+  }
+  if (rain >= 1 || ['1','2','3','5','6','7'].includes(pty)) {
+    return {
+      lv: 'lv2',
+      label: '가능하지만 아쉬움',
+      sub: golf ? '우산·우비를 챙기세요. 그립이 미끄러울 수 있습니다'
+                : '우산·우비를 챙기세요',
+      rain
+    };
+  }
+  if (wsd >= 10) {
+    return {
+      lv: 'lv2',
+      label: '바람이 강합니다',
+      sub: '방풍 자켓을 준비하세요',
+      rain
+    };
+  }
+
+  return {
+    lv: 'lv1',
+    label: golf ? '라운드 하기 좋아요' : '야외활동 하기 좋아요',
+    sub: '기상 조건이 양호합니다',
+    rain
+  };
 }
 
 /* ═══════════════════════════════════════════════
@@ -495,7 +818,7 @@ async function reverseGeocode(lat,lon){
 /* ═══════════════════════════════════════════════
    Cloudflare Worker URL — 여기만 수정하면 됩니다
 ═══════════════════════════════════════════════ */
-const WORKER_URL = 'https://kma-proxy.kojilkojil5.workers.dev';
+const WORKER_URL = 'https://kma-proxy.YOUR_SUBDOMAIN.workers.dev';
 
 /* ═══════════════════════════════════════════════
    API 호출 (Worker 경유)
@@ -515,6 +838,18 @@ async function fetchForecast(nx, ny) {
 /* ═══════════════════════════════════════════════
    UI 렌더
 ═══════════════════════════════════════════════ */
+/* 타임라인용 미니 표정 */
+function getMiniFace(slot) {
+  const pty  = slot['PTY'] || '0';
+  const lgt  = slot['LGT'] || '0';
+  const raw  = slot['RN1'] || '강수없음';
+  const rain = raw === '강수없음' ? 0 : parseFloat(raw) || 0;
+  if (lgt !== '0') return '⚡';
+  if (rain >= 5 || pty === '4') return '😭';
+  if (rain >= 1 || pty !== '0')  return '😕';
+  return '😀';
+}
+
 function renderUI(items,locationName){
   const now=new Date();
   const pad=n=>String(n).padStart(2,'0');
@@ -532,12 +867,14 @@ function renderUI(items,locationName){
   const currentKey=times.find(k=>k>=`${items[0]?.fcstDate}${nowHHMM}`)||times[0];
   const cur=byTime[currentKey]||{};
 
-  const cond=getCondition(Object.entries(cur).map(([category,fcstValue])=>({category,fcstValue})));
-  const banner=document.getElementById('condition-banner');
-  banner.className=`condition-banner ${cond.level}`;
-  document.getElementById('condition-icon').textContent=getWeatherIcon(cur['PTY'],cur['SKY']);
-  document.getElementById('condition-label').textContent=cond.label;
-  document.getElementById('condition-sub').textContent=cond.sub;
+  const cond = getGolfCondition(cur);
+  const card = document.getElementById('golfer-card');
+  card.className = cond.lv;
+  document.getElementById('golfer-svg').innerHTML = GOLFER_SVG[cond.lv];
+  document.getElementById('golfer-label').textContent = cond.label;
+  document.getElementById('golfer-sub').textContent   = cond.sub;
+  document.getElementById('golfer-rain').textContent  =
+    cond.rain > 0 ? `예상 강수량 ${cond.rain}mm/h` : '';
 
   const pty=cur['PTY']||'0',rn1=cur['RN1']||'강수없음',lgt=cur['LGT']||'0',wsd=cur['WSD']||'—';
   document.getElementById('m-pty').textContent=getPtyLabel(pty);
@@ -568,7 +905,7 @@ function renderUI(items,locationName){
     el.className='tl-slot';
     el.innerHTML=`
       <div class="tl-time">${hh}:${mm}</div>
-      <div class="tl-icon">${getWeatherIcon(tPty,tSky)}</div>
+      <div class="tl-icon">${getMiniFace(slot)}</div>
       <div class="tl-temp">${tTemp}°</div>
       <div class="tl-rain">${tRainVal>0?tRainVal+'mm':''}</div>
       <div class="tl-bar-wrap"><div class="tl-bar" style="width:${barPct}%;background:${getRainBarColor(tPty)}"></div></div>
@@ -614,26 +951,40 @@ function showError(msg) {
   retryBtn.style.display = 'block';
 }
 
+/* 현재 선택된 장소. null이면 GPS 사용 */
+let selectedPlace = null;   // { name, lat, lon }
+
 async function loadWeather() {
-  showOverlay('위치 확인 중…');
   try {
-    const pos = await new Promise((res, rej) =>
-      navigator.geolocation.getCurrentPosition(res, rej, {timeout: 10000})
-    );
-    const {latitude: lat, longitude: lon} = pos.coords;
-    showOverlay('날씨 데이터 불러오는 중…');
+    let lat, lon, name;
+
+    if (selectedPlace) {
+      lat  = selectedPlace.lat;
+      lon  = selectedPlace.lon;
+      name = selectedPlace.name;
+      showOverlay('날씨 데이터 불러오는 중…');
+    } else {
+      showOverlay('위치 확인 중…');
+      const pos = await new Promise((res, rej) =>
+        navigator.geolocation.getCurrentPosition(res, rej, {
+          timeout: 30000, maximumAge: 60000, enableHighAccuracy: false
+        })
+      );
+      lat = pos.coords.latitude;
+      lon = pos.coords.longitude;
+      showOverlay('날씨 데이터 불러오는 중…');
+      name = await reverseGeocode(lat, lon);
+    }
+
     const {nx, ny} = latLonToGrid(lat, lon);
-    const [items, locationName] = await Promise.all([
-      fetchForecast(nx, ny),
-      reverseGeocode(lat, lon)
-    ]);
-    renderUI(items, locationName);
+    const items = await fetchForecast(nx, ny);
+    renderUI(items, name);
     hideOverlay();
     document.getElementById('refresh-btn').classList.remove('spinning');
   } catch(e) {
     let msg = e.message || '알 수 없는 오류';
-    if (e.code === 1) msg = '위치 권한이 거부되었습니다.\n브라우저 설정에서 위치 권한을 허용해 주세요.';
-    else if (e.code === 3) msg = '위치 정보 요청 시간이 초과되었습니다.';
+    if (e.code === 1) msg = '위치 권한이 거부되었습니다.\n브라우저 설정에서 위치 권한을 허용하거나,\n장소명을 직접 검색해 주세요.';
+    else if (e.code === 3) msg = '위치 정보 요청 시간이 초과되었습니다.\n장소명을 직접 검색해 보세요.';
     showError(msg);
     document.getElementById('refresh-btn').classList.remove('spinning');
   }
@@ -644,6 +995,234 @@ document.getElementById('refresh-btn').addEventListener('click', () => {
   loadWeather();
 });
 retryBtn.addEventListener('click', loadWeather);
+
+/* ═══════════════════════════════════════════════
+   장소 검색 · 즐겨찾기
+═══════════════════════════════════════════════ */
+const FAV_KEY = 'golf_fav_places';
+const searchOverlay = document.getElementById('search-overlay');
+const searchInput   = document.getElementById('search-input');
+const searchResults = document.getElementById('search-results');
+
+function getFavs() {
+  try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; }
+  catch { return []; }
+}
+function saveFavs(list) {
+  localStorage.setItem(FAV_KEY, JSON.stringify(list));
+}
+function isFav(p) {
+  return getFavs().some(f => f.name === p.name);
+}
+function toggleFav(p) {
+  const favs = getFavs();
+  const i = favs.findIndex(f => f.name === p.name);
+  if (i >= 0) favs.splice(i, 1);
+  else favs.push(p);
+  saveFavs(favs);
+}
+
+function placeRow(p, {star = true, icon = '⛳'} = {}) {
+  const row = document.createElement('div');
+  row.className = 'place-row';
+  row.innerHTML = `
+    <div class="place-icon">${icon}</div>
+    <div class="place-body">
+      <div class="place-name"></div>
+      ${p.addr ? '<div class="place-addr"></div>' : ''}
+    </div>
+    ${star ? `<button class="place-star">${isFav(p) ? '★' : '☆'}</button>` : ''}
+  `;
+  row.querySelector('.place-name').textContent = p.name;
+  if (p.addr) row.querySelector('.place-addr').textContent = p.addr;
+
+  row.addEventListener('click', () => {
+    selectedPlace = {name: p.name, lat: p.lat, lon: p.lon};
+    closeSearch();
+    loadWeather();
+  });
+
+  const starBtn = row.querySelector('.place-star');
+  if (starBtn) {
+    starBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      toggleFav({name: p.name, lat: p.lat, lon: p.lon, addr: p.addr});
+      starBtn.textContent = isFav(p) ? '★' : '☆';
+      if (!searchInput.value.trim()) renderSearchHome();
+    });
+  }
+  return row;
+}
+
+function renderSearchHome() {
+  searchResults.innerHTML = '';
+
+  const gpsRow = document.createElement('div');
+  gpsRow.className = 'place-row';
+  gpsRow.innerHTML = `
+    <div class="place-icon">📍</div>
+    <div class="place-body"><div class="place-name">현재 위치 사용</div></div>
+  `;
+  gpsRow.addEventListener('click', () => {
+    selectedPlace = null;
+    closeSearch();
+    loadWeather();
+  });
+  searchResults.appendChild(gpsRow);
+
+  const favs = getFavs();
+  if (favs.length) {
+    const t = document.createElement('div');
+    t.className = 'search-sec-title';
+    t.textContent = '즐겨찾기';
+    searchResults.appendChild(t);
+    favs.forEach(f => searchResults.appendChild(placeRow(f)));
+  }
+}
+
+let searchTimer = null;
+async function runSearch(q) {
+  searchResults.innerHTML = '<div class="search-msg">검색 중…</div>';
+  try {
+    const url = `https://nominatim.openstreetmap.org/search`
+      + `?q=${encodeURIComponent(q)}&format=json&countrycodes=kr&limit=8&accept-language=ko`;
+    const res  = await fetch(url, {headers: {'Accept-Language': 'ko'}});
+    const list = await res.json();
+
+    if (!list.length) {
+      searchResults.innerHTML =
+        '<div class="search-msg">검색 결과가 없습니다.<br>골프장 정식 명칭이나 인근 지역명(읍·면·동)으로<br>다시 검색해 보세요.</div>';
+      return;
+    }
+
+    searchResults.innerHTML = '';
+    list.forEach(r => {
+      const full = r.display_name || '';
+      const name = full.split(',')[0].trim();
+      const addr = full.split(',').slice(1, 4).join(',').trim();
+      searchResults.appendChild(placeRow(
+        {name, addr, lat: parseFloat(r.lat), lon: parseFloat(r.lon)},
+        {icon: '📌'}
+      ));
+    });
+  } catch {
+    searchResults.innerHTML = '<div class="search-msg">검색에 실패했습니다.<br>잠시 후 다시 시도해 주세요.</div>';
+  }
+}
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim();
+  clearTimeout(searchTimer);
+  if (q.length < 2) { renderSearchHome(); return; }
+  searchTimer = setTimeout(() => runSearch(q), 500);
+});
+
+function openSearch() {
+  searchOverlay.classList.add('open');
+  searchInput.value = '';
+  renderSearchHome();
+  setTimeout(() => searchInput.focus(), 100);
+}
+function closeSearch() { searchOverlay.classList.remove('open'); }
+
+document.getElementById('loc-btn').addEventListener('click', openSearch);
+document.getElementById('search-close').addEventListener('click', closeSearch);
+
+/* ═══════════════════════════════════════════════
+   준비물 체크리스트
+   순서 = 골퍼들이 자주 깜빡하는 순
+═══════════════════════════════════════════════ */
+const CHECK_ITEMS = [
+  {id:'glove',  emoji:'🧤', name:'장갑'},
+  {id:'ball',   emoji:'🏌️', name:'여분 볼'},
+  {id:'tee',    emoji:'📍', name:'티'},
+  {id:'marker', emoji:'🪙', name:'볼마커'},
+  {id:'shoes',  emoji:'👟', name:'골프화'},
+  {id:'sun',    emoji:'🧴', name:'선크림'},
+  {id:'cap',    emoji:'🧢', name:'모자'},
+  {id:'towel',  emoji:'🧻', name:'수건'},
+  {id:'rain',   emoji:'☂️', name:'우산·우비'},
+  {id:'cloth',  emoji:'👕', name:'여벌 옷'},
+  {id:'water',  emoji:'💧', name:'물·간식'},
+  {id:'range',  emoji:'📏', name:'거리측정기'},
+];
+
+const CHECK_KEY = 'golf_checklist';
+function getChecked() {
+  try { return JSON.parse(localStorage.getItem(CHECK_KEY)) || []; }
+  catch { return []; }
+}
+function setChecked(list) {
+  localStorage.setItem(CHECK_KEY, JSON.stringify(list));
+}
+
+function renderChecklist() {
+  const grid = document.getElementById('check-grid');
+  const done = getChecked();
+  grid.innerHTML = '';
+
+  CHECK_ITEMS.forEach((it, idx) => {
+    const el = document.createElement('div');
+    el.className = 'check-item' + (done.includes(it.id) ? ' done' : '');
+    el.innerHTML = `
+      <div class="ci-rank">${idx + 1}</div>
+      <div class="ci-emoji">${it.emoji}</div>
+      <div class="ci-name">${it.name}</div>
+    `;
+    el.addEventListener('click', () => {
+      const cur = getChecked();
+      const i = cur.indexOf(it.id);
+      if (i >= 0) cur.splice(i, 1); else cur.push(it.id);
+      setChecked(cur);
+      renderChecklist();
+    });
+    grid.appendChild(el);
+  });
+
+  const pct = Math.round(done.length / CHECK_ITEMS.length * 100);
+  document.getElementById('check-progress').style.width = pct + '%';
+}
+
+document.getElementById('check-reset').addEventListener('click', () => {
+  setChecked([]);
+  renderChecklist();
+});
+renderChecklist();
+
+/* ═══════════════════════════════════════════════
+   모드 (골프 / 일반)
+═══════════════════════════════════════════════ */
+const MODE_KEY = 'app_mode';
+let appMode = localStorage.getItem(MODE_KEY) || 'golf';
+
+function applyMode() {
+  document.getElementById('tab-check').style.display =
+    appMode === 'golf' ? 'flex' : 'none';
+
+  document.getElementById('timeline-title').textContent =
+    appMode === 'golf' ? '향후 6시간 · 라운드 컨디션' : '향후 6시간';
+
+  document.querySelectorAll('.mode-opt').forEach(o => {
+    o.classList.toggle('active', o.dataset.mode === appMode);
+  });
+
+  // 준비물 탭이 숨겨졌는데 그 페이지에 있으면 날씨로 이동
+  if (appMode !== 'golf' &&
+      document.getElementById('page-check').classList.contains('active')) {
+    document.querySelector('.tab-btn[data-page="page-weather"]').click();
+  }
+}
+
+document.querySelectorAll('.mode-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    appMode = opt.dataset.mode;
+    localStorage.setItem(MODE_KEY, appMode);
+    applyMode();
+    loadWeather();
+  });
+});
+
+applyMode();
 
 // Worker 방식: API 키 불필요 — 바로 시작
 loadWeather();
