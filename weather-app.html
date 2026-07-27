@@ -2,423 +2,374 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>야외 날씨</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>골프 날씨</title>
 <style>
-  :root {
-    --sky: #0a1628;
-    --sky-mid: #0d2244;
-    --sky-card: rgba(255,255,255,0.06);
-    --sky-border: rgba(255,255,255,0.10);
-    --rain: #4da6ff;
-    --rain-dim: rgba(77,166,255,0.18);
-    --thunder: #ffe066;
-    --wind: #7ef7c8;
-    --safe: #52d98a;
-    --warn: #ffb84d;
-    --danger: #ff5e5e;
-    --text: #f0f4ff;
-    --text-dim: rgba(240,244,255,0.50);
-    --mono: 'SF Mono', 'Consolas', monospace;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--sky);
-    color: var(--text);
-    font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    padding-bottom: 70px;
-  }
+:root {
+  --green: #2eaf6e;
+  --green-light: #e8f7ef;
+  --green-mid: #c4ebd8;
+  --yellow: #f5a623;
+  --yellow-light: #fef6e8;
+  --red: #e8534a;
+  --red-light: #fdecea;
+  --blue: #3a8ef6;
+  --blue-light: #eaf2ff;
+  --gray1: #ffffff;
+  --gray2: #f5f6f8;
+  --gray3: #ebebeb;
+  --gray4: #c0c4cc;
+  --gray5: #8e95a2;
+  --gray6: #4a5160;
+  --gray7: #1a1e28;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.12);
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  background: var(--gray2);
+  color: var(--gray7);
+  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  min-height: 100dvh;
+  padding-bottom: 68px;
+}
 
-  /* ── 탭 바 ── */
-  #tab-bar {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: 60px;
-    background: #0d1f3c;
-    border-top: 1px solid var(--sky-border);
-    display: flex;
-    z-index: 50;
-  }
-  .tab-btn {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    background: none;
-    border: none;
-    color: var(--text-dim);
-    font-size: 10px;
-    cursor: pointer;
-    transition: color 0.2s;
-  }
-  .tab-btn .tab-icon { font-size: 20px; line-height: 1; }
-  .tab-btn.active { color: var(--rain); }
+/* ── 로딩 오버레이 ── */
+#overlay {
+  position: fixed; inset: 0; background: #fff;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 16px;
+  z-index: 200; transition: opacity 0.3s;
+}
+#overlay.hidden { opacity: 0; pointer-events: none; }
+.loader {
+  width: 36px; height: 36px;
+  border: 3px solid var(--gray3);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#overlay-msg { font-size: 14px; color: var(--gray5); }
+#overlay-err { display: none; font-size: 13px; color: var(--red); text-align: center; padding: 0 30px; line-height: 1.6; }
+#retry-btn {
+  display: none; padding: 10px 24px;
+  background: var(--green); color: #fff;
+  border: none; border-radius: 8px; font-size: 14px; cursor: pointer;
+}
 
-  /* ── 페이지 ── */
-  .page { display: none; flex-direction: column; }
-  .page.active { display: flex; }
+/* ── 탭바 ── */
+#tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 60px; background: #fff;
+  border-top: 1px solid var(--gray3);
+  display: flex; z-index: 50;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
+}
+.tab-btn {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 2px;
+  background: none; border: none;
+  color: var(--gray4); font-size: 10px; cursor: pointer;
+}
+.tab-btn .tab-icon { font-size: 20px; }
+.tab-btn.active { color: var(--green); }
+.tab-btn.active .tab-icon { filter: drop-shadow(0 1px 3px rgba(46,175,110,0.3)); }
 
-  /* ── HEADER ── */
-  #header {
-    padding: 20px 20px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-  #location-name { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
-  #update-time { font-size: 11px; color: var(--text-dim); margin-top: 3px; font-family: var(--mono); }
-  #refresh-btn {
-    background: none; border: none; cursor: pointer;
-    color: var(--text-dim); font-size: 18px; padding: 4px;
-    transition: transform 0.3s;
-  }
-  #refresh-btn:hover { color: var(--text); }
-  #refresh-btn.spinning { animation: spin 1s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* ── 페이지 ── */
+.page { display: none; flex-direction: column; }
+.page.active { display: flex; }
 
-  #loc-btn {
-    display: flex; align-items: center; gap: 6px;
-    background: none; border: none; padding: 0; cursor: pointer;
-    color: var(--text); text-align: left;
-  }
-  #loc-btn .caret { font-size: 11px; color: var(--text-dim); }
+/* ══════════════════════════════════
+   날씨 페이지
+══════════════════════════════════ */
 
-  /* ── 장소 검색 오버레이 ── */
-  #search-overlay {
-    position: fixed; inset: 0;
-    background: var(--sky);
-    z-index: 150;
-    display: none;
-    flex-direction: column;
-    padding: 20px;
-  }
-  #search-overlay.open { display: flex; }
-  .search-top { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
-  #search-input {
-    flex: 1;
-    padding: 13px 15px;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid var(--sky-border);
-    border-radius: 12px;
-    color: var(--text); font-size: 15px; outline: none;
-  }
-  #search-input:focus { border-color: var(--rain); }
-  #search-close {
-    background: none; border: none; color: var(--text-dim);
-    font-size: 22px; cursor: pointer; padding: 4px 6px;
-  }
-  .search-hint { font-size: 11px; color: var(--text-dim); margin-bottom: 14px; line-height: 1.6; }
-  .search-sec-title {
-    font-size: 10px; color: var(--text-dim); letter-spacing: 1px;
-    margin: 16px 0 8px; text-transform: uppercase;
-  }
-  .place-row {
-    display: flex; align-items: center; gap: 12px;
-    padding: 14px 15px;
-    background: var(--sky-card);
-    border: 1px solid var(--sky-border);
-    border-radius: 12px;
-    margin-bottom: 8px;
-    cursor: pointer;
-  }
-  .place-row:active { background: rgba(255,255,255,0.10); }
-  .place-icon { font-size: 20px; }
-  .place-name { font-size: 14px; font-weight: 600; }
-  .place-addr { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
-  .place-body { flex: 1; min-width: 0; }
-  .place-star {
-    background: none; border: none; font-size: 17px;
-    cursor: pointer; padding: 4px; color: var(--text-dim);
-  }
-  #search-results { overflow-y: auto; flex: 1; }
-  .search-msg { font-size: 12px; color: var(--text-dim); text-align: center; padding: 24px 10px; line-height: 1.7; }
+/* 헤더 */
+#header {
+  background: #fff;
+  padding: 14px 16px 12px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--gray3);
+  position: sticky; top: 0; z-index: 30;
+}
+#loc-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--gray2); border: 1px solid var(--gray3);
+  border-radius: 20px; padding: 6px 12px;
+  cursor: pointer; max-width: 220px;
+}
+#location-name { font-size: 14px; font-weight: 700; color: var(--gray7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#loc-btn .caret { font-size: 9px; color: var(--gray5); flex-shrink: 0; }
+.header-right { display: flex; gap: 4px; }
+.icon-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 18px; padding: 6px; color: var(--gray6);
+}
+#update-time { font-size: 10px; color: var(--gray5); text-align: right; margin-top: 2px; }
 
-  /* ── 준비물 체크리스트 ── */
-  #page-check { padding: 20px 20px 0; }
-  .check-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-  .check-title { font-size: 16px; font-weight: 700; }
-  #check-reset {
-    background: none; border: 1px solid var(--sky-border);
-    color: var(--text-dim); border-radius: 8px;
-    font-size: 11px; padding: 5px 11px; cursor: pointer;
-  }
-  .check-desc { font-size: 11px; color: var(--text-dim); margin-bottom: 14px; line-height: 1.6; }
-  #check-progress-wrap {
-    height: 6px; background: rgba(255,255,255,0.08);
-    border-radius: 3px; overflow: hidden; margin-bottom: 18px;
-  }
-  #check-progress { height: 100%; background: var(--safe); width: 0%; transition: width 0.35s; }
-  #check-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
-  }
-  .check-item {
-    background: var(--sky-card);
-    border: 1px solid var(--sky-border);
-    border-radius: 14px;
-    padding: 14px 8px 12px;
-    text-align: center;
-    cursor: pointer;
-    position: relative;
-    transition: opacity 0.25s, background 0.25s;
-  }
-  .check-item .ci-emoji { font-size: 30px; line-height: 1; }
-  .check-item .ci-name  { font-size: 11px; font-weight: 600; margin-top: 7px; }
-  .check-item .ci-rank  {
-    position: absolute; top: 6px; left: 8px;
-    font-size: 9px; color: var(--text-dim); font-family: var(--mono);
-  }
-  .check-item.done {
-    opacity: 0.30;
-    background: rgba(82,217,138,0.08);
-    border-color: rgba(82,217,138,0.25);
-  }
-  .check-item.done::after {
-    content: '✓';
-    position: absolute; top: 6px; right: 8px;
-    font-size: 12px; color: var(--safe); font-weight: 800;
-  }
+/* 골프지수 카드 */
+#golf-card {
+  margin: 12px 14px 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+#golf-card-top {
+  padding: 18px 18px 16px;
+  display: flex; align-items: center; gap: 14px;
+}
+#golf-card-top.lv1 { background: var(--green); }
+#golf-card-top.lv2 { background: var(--green); }
+#golf-card-top.lv3 { background: var(--yellow); }
+#golf-card-top.lv4 { background: var(--red); }
+#golf-card-top.lvX { background: #cc3333; }
+#golfer-svg { width: 76px; height: 76px; flex-shrink: 0; }
+#golf-grade {
+  font-size: 28px; font-weight: 900; color: #fff;
+  letter-spacing: -0.5px; line-height: 1;
+}
+#golf-temp-row {
+  display: flex; gap: 10px; align-items: baseline;
+  margin-top: 4px;
+}
+#golf-temp { font-size: 16px; color: rgba(255,255,255,0.9); font-weight: 600; }
+#golf-minmax { font-size: 13px; color: rgba(255,255,255,0.7); }
+#golf-summary {
+  background: rgba(0,0,0,0.12);
+  margin: 0 12px 12px; border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px; color: rgba(255,255,255,0.9); line-height: 1.6;
+}
+#golf-card-top.lv1 ~ #golf-summary,
+#golf-card-top.lv2 ~ #golf-summary { background: rgba(0,0,0,0.12); }
 
-  /* ── 설정 ── */
-  #page-settings { padding: 20px 20px 0; }
-  .set-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-  .set-desc  { font-size: 11px; color: var(--text-dim); margin-bottom: 16px; line-height: 1.6; }
-  .mode-opt {
-    display: flex; align-items: center; gap: 14px;
-    padding: 16px 18px;
-    background: var(--sky-card);
-    border: 1px solid var(--sky-border);
-    border-radius: 14px;
-    margin-bottom: 10px;
-    cursor: pointer;
-  }
-  .mode-opt.active { border-color: var(--rain); background: var(--rain-dim); }
-  .mode-opt .mo-icon { font-size: 26px; }
-  .mode-opt .mo-name { font-size: 15px; font-weight: 700; }
-  .mode-opt .mo-sub  { font-size: 11px; color: var(--text-dim); margin-top: 3px; line-height: 1.5; }
-  .mode-opt .mo-body { flex: 1; }
-  .mode-opt .mo-check { font-size: 16px; color: var(--rain); opacity: 0; }
-  .mode-opt.active .mo-check { opacity: 1; }
+/* 시간별 */
+#hourly-wrap {
+  background: #fff; margin: 10px 14px 0;
+  border-radius: var(--radius); padding: 14px;
+  box-shadow: var(--shadow);
+}
+.section-title {
+  font-size: 11px; font-weight: 700; color: var(--gray5);
+  letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 12px;
+}
+#hourly-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+#hourly-scroll::-webkit-scrollbar { display: none; }
+.h-slot {
+  flex-shrink: 0; width: 62px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 8px 4px; border-radius: 10px;
+  background: var(--gray2);
+}
+.h-slot.now { background: var(--green-light); border: 1.5px solid var(--green-mid); }
+.h-time { font-size: 10px; color: var(--gray5); font-weight: 600; }
+.h-slot.now .h-time { color: var(--green); }
+.h-face { font-size: 18px; line-height: 1; }
+.h-temp { font-size: 14px; font-weight: 800; color: var(--gray7); }
+.h-rain { font-size: 10px; color: var(--blue); font-weight: 600; min-height: 14px; }
 
-  /* ── CONDITION BADGE ── */
-  /* ── 골퍼 캐릭터 카드 ── */
-  #golfer-card {
-    margin: 16px 20px 0;
-    padding: 20px;
-    border-radius: 18px;
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    transition: background 0.5s, border-color 0.5s;
-  }
-  #golfer-card.lv1 { background: rgba(82,217,138,0.12); border: 1px solid rgba(82,217,138,0.28); }
-  #golfer-card.lv2 { background: rgba(255,184,77,0.12); border: 1px solid rgba(255,184,77,0.28); }
-  #golfer-card.lv3 { background: rgba(255,94,94,0.14);  border: 1px solid rgba(255,94,94,0.32); }
-  #golfer-svg { width: 88px; height: 88px; flex-shrink: 0; }
-  #golfer-text { flex: 1; }
-  #golfer-label { font-size: 21px; font-weight: 800; letter-spacing: -0.6px; line-height: 1.2; }
-  #golfer-sub   { font-size: 12px; color: var(--text-dim); margin-top: 5px; line-height: 1.5; }
-  #golfer-rain  { font-size: 11px; margin-top: 7px; font-family: var(--mono); color: var(--text-dim); }
+/* 핵심 수치 */
+#metrics {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 8px; margin: 10px 14px 0;
+}
+.m-card {
+  background: #fff; border-radius: var(--radius-sm);
+  padding: 14px 10px; text-align: center;
+  box-shadow: var(--shadow);
+}
+.m-label { font-size: 10px; color: var(--gray5); margin-bottom: 6px; font-weight: 600; }
+.m-val { font-size: 22px; font-weight: 800; color: var(--gray7); line-height: 1; }
+.m-unit { font-size: 10px; color: var(--gray5); margin-top: 3px; }
+.m-card.alert-rain .m-val { color: var(--blue); }
+.m-card.alert-thunder .m-val { color: var(--yellow); }
+.m-card.alert-wind .m-val { color: var(--red); }
 
-  /* ── KEY METRICS ── */
-  #metrics {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin: 12px 20px 0;
-  }
-  .metric-card {
-    background: var(--sky-card);
-    border: 1px solid var(--sky-border);
-    border-radius: 12px;
-    padding: 12px 10px;
-    text-align: center;
-  }
-  .metric-label { font-size: 10px; color: var(--text-dim); letter-spacing: 0.3px; margin-bottom: 6px; }
-  .metric-value { font-size: 20px; font-weight: 700; font-family: var(--mono); line-height: 1; }
-  .metric-unit  { font-size: 10px; color: var(--text-dim); margin-top: 3px; }
-  .metric-card.rain-alert .metric-value { color: var(--rain); }
-  .metric-card.thunder-alert .metric-value { color: var(--thunder); }
-  .metric-card.wind-alert .metric-value { color: var(--wind); }
+/* 주간 예보 */
+#weekly-wrap {
+  background: #fff; margin: 10px 14px 0;
+  border-radius: var(--radius); padding: 14px;
+  box-shadow: var(--shadow);
+}
+.w-row {
+  display: flex; align-items: center;
+  padding: 10px 4px; border-bottom: 1px solid var(--gray3);
+}
+.w-row:last-child { border-bottom: none; }
+.w-day { width: 36px; }
+.w-dow { font-size: 13px; font-weight: 700; color: var(--gray7); }
+.w-date { font-size: 10px; color: var(--gray5); }
+.w-grade-badge {
+  width: 48px; text-align: center;
+  font-size: 11px; font-weight: 700;
+  padding: 4px 0; border-radius: 20px;
+  margin: 0 10px;
+}
+.badge-lv1 { background: var(--green-light); color: var(--green); }
+.badge-lv2 { background: #e3f5ec; color: #1e9958; }
+.badge-lv3 { background: var(--yellow-light); color: var(--yellow); }
+.badge-lv4 { background: var(--red-light); color: var(--red); }
+.w-icon { font-size: 22px; width: 32px; text-align: center; }
+.w-temps { flex: 1; text-align: right; }
+.w-max { font-size: 15px; font-weight: 800; color: var(--gray7); }
+.w-min { font-size: 13px; color: var(--gray5); margin-left: 4px; }
+.w-pop { font-size: 11px; color: var(--blue); margin-top: 2px; }
 
-  /* ── 6H TIMELINE ── */
-  #timeline-wrap {
-    margin: 12px 20px 0;
-    background: var(--sky-card);
-    border: 1px solid var(--sky-border);
-    border-radius: 14px;
-    padding: 14px 14px 10px;
-  }
-  #timeline-title { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
-  #timeline {
-    display: grid;
-    grid-template-columns: repeat(6,1fr);
-    gap: 4px;
-  }
-  .tl-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .tl-time { font-size: 10px; color: var(--text-dim); font-family: var(--mono); }
-  .tl-icon { font-size: 20px; line-height: 1; }
-  .tl-temp { font-size: 13px; font-weight: 700; font-family: var(--mono); }
-  .tl-rain { font-size: 10px; color: var(--rain); font-family: var(--mono); }
-  .tl-bar-wrap { width: 100%; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
-  .tl-bar { height: 100%; border-radius: 2px; transition: width 0.5s; }
+/* 낙뢰 배너 */
+#thunder-banner {
+  margin: 10px 14px 0;
+  padding: 14px 16px;
+  background: #fff3cd; border: 1.5px solid #ffc107;
+  border-radius: var(--radius-sm);
+  display: none;
+}
+#thunder-banner.show { display: flex; gap: 10px; align-items: center; }
+#thunder-banner .t-icon { font-size: 24px; }
+#thunder-banner .t-msg { font-size: 13px; font-weight: 700; color: #7d4e00; line-height: 1.5; }
 
-  /* ── SECONDARY GRID ── */
-  #secondary {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin: 8px 20px 0;
-  }
-  .sec-card {
-    background: var(--sky-card);
-    border: 1px solid var(--sky-border);
-    border-radius: 12px;
-    padding: 12px 14px;
-  }
-  .sec-label { font-size: 10px; color: var(--text-dim); letter-spacing: 0.3px; margin-bottom: 6px; }
-  .sec-val { font-size: 18px; font-weight: 700; font-family: var(--mono); }
-  .sec-unit { font-size: 10px; color: var(--text-dim); }
+#page-weather-footer {
+  margin: 10px 14px 4px;
+  font-size: 10px; color: var(--gray4); text-align: center; line-height: 1.7;
+}
 
-  /* ── THUNDER BAR ── */
-  #thunder-section {
-    margin: 8px 20px 0;
-    padding: 12px 14px;
-    background: rgba(255,224,102,0.07);
-    border: 1px solid rgba(255,224,102,0.20);
-    border-radius: 12px;
-    display: none;
-  }
-  #thunder-section.visible { display: block; }
-  #thunder-section .lbl { font-size: 11px; color: var(--thunder); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; }
-  #thunder-section .sub { font-size: 11px; color: var(--text-dim); }
+/* ══════════════════════════════════
+   검색 오버레이
+══════════════════════════════════ */
+#search-overlay {
+  position: fixed; inset: 0; background: #fff;
+  z-index: 150; display: none; flex-direction: column;
+}
+#search-overlay.open { display: flex; }
+.search-topbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--gray3);
+  background: #fff; position: sticky; top: 0;
+}
+#search-input {
+  flex: 1; padding: 10px 14px;
+  background: var(--gray2); border: 1px solid var(--gray3);
+  border-radius: 20px; font-size: 15px; outline: none;
+  color: var(--gray7);
+}
+#search-input:focus { border-color: var(--green); }
+#search-close {
+  background: none; border: none; font-size: 22px;
+  color: var(--gray5); cursor: pointer; padding: 4px;
+}
+.search-hint { font-size: 12px; color: var(--gray5); padding: 12px 16px 4px; }
+#search-results { flex: 1; overflow-y: auto; padding: 8px 14px; }
+.search-sec-title {
+  font-size: 11px; font-weight: 700; color: var(--gray5);
+  letter-spacing: 0.5px; padding: 8px 0 6px;
+}
+.place-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 12px; background: var(--gray2);
+  border-radius: var(--radius-sm); margin-bottom: 8px; cursor: pointer;
+}
+.place-row:active { background: var(--green-light); }
+.place-icon { font-size: 20px; }
+.place-body { flex: 1; min-width: 0; }
+.place-name { font-size: 14px; font-weight: 700; color: var(--gray7); }
+.place-addr { font-size: 11px; color: var(--gray5); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.place-tel  { font-size: 11px; color: var(--blue); margin-top: 2px; }
+.place-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.place-star { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--gray4); }
+.place-call {
+  display: flex; align-items: center; gap: 4px;
+  padding: 5px 10px; background: var(--green-light);
+  border: 1px solid var(--green-mid); border-radius: 20px;
+  font-size: 11px; font-weight: 700; color: var(--green); cursor: pointer;
+  text-decoration: none;
+}
+.search-msg { font-size: 13px; color: var(--gray5); text-align: center; padding: 32px 20px; line-height: 1.7; }
 
-  /* ── RADAR PAGE ── */
-  #page-radar {
-    padding: 20px 20px 0;
-    display: flex;
-    flex-direction: column;
-  }
-  .radar-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-  .radar-desc  { font-size: 12px; color: var(--text-dim); margin-bottom: 18px; line-height: 1.6; }
-  .radar-btn {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 18px 20px;
-    border-radius: 16px;
-    border: 1px solid var(--sky-border);
-    background: var(--sky-card);
-    color: var(--text);
-    text-decoration: none;
-    margin-bottom: 12px;
-    transition: background 0.2s;
-  }
-  .radar-btn:active { background: rgba(255,255,255,0.10); }
-  .radar-btn-icon   { font-size: 36px; line-height: 1; }
-  .radar-btn-label  { font-size: 16px; font-weight: 700; }
-  .radar-btn-sub    { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
-  .radar-btn.rain    { border-color: rgba(77,166,255,0.40); }
-  .radar-btn.thunder { border-color: rgba(255,224,102,0.40); }
-  .radar-tip {
-    margin-top: 4px;
-    padding: 12px 14px;
-    background: var(--sky-card);
-    border: 1px solid var(--sky-border);
-    border-radius: 12px;
-    font-size: 11px;
-    color: var(--text-dim);
-    line-height: 1.7;
-  }
+/* ══════════════════════════════════
+   준비물 탭
+══════════════════════════════════ */
+#page-check { padding: 16px 14px 0; }
+.check-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.page-title { font-size: 18px; font-weight: 800; color: var(--gray7); }
+#check-reset {
+  background: none; border: 1px solid var(--gray3);
+  color: var(--gray5); border-radius: 8px;
+  font-size: 11px; padding: 5px 12px; cursor: pointer;
+}
+.check-subdesc { font-size: 12px; color: var(--gray5); margin-bottom: 12px; line-height: 1.6; }
+#check-progress-wrap { height: 6px; background: var(--gray3); border-radius: 3px; overflow: hidden; margin-bottom: 16px; }
+#check-progress { height: 100%; background: var(--green); width: 0%; transition: width 0.35s; border-radius: 3px; }
+#check-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.check-item {
+  background: #fff; border: 1.5px solid var(--gray3);
+  border-radius: var(--radius-sm); padding: 14px 8px 12px;
+  text-align: center; cursor: pointer; position: relative;
+  transition: opacity 0.25s, border-color 0.25s;
+  box-shadow: var(--shadow);
+}
+.check-item .ci-rank { position: absolute; top: 6px; left: 8px; font-size: 9px; color: var(--gray4); }
+.check-item .ci-emoji { font-size: 30px; }
+.check-item .ci-name { font-size: 11px; font-weight: 700; color: var(--gray6); margin-top: 6px; }
+.check-item.done { opacity: 0.30; background: var(--green-light); border-color: var(--green-mid); }
+.check-item.done::after { content: '✓'; position: absolute; top: 6px; right: 8px; font-size: 13px; color: var(--green); font-weight: 900; }
 
-  /* ── LOADING / ERROR ── */
-  #overlay {
-    position: fixed; inset: 0;
-    background: var(--sky);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 14px;
-    z-index: 100;
-    transition: opacity 0.4s;
-  }
-  #overlay.hidden { opacity: 0; pointer-events: none; }
-  .loader {
-    width: 40px; height: 40px;
-    border: 3px solid rgba(255,255,255,0.1);
-    border-top-color: var(--rain);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  #overlay-msg { font-size: 14px; color: var(--text-dim); text-align: center; padding: 0 30px; }
-  #overlay-err { display: none; font-size: 13px; color: var(--danger); text-align: center; padding: 0 30px; }
-  #retry-btn {
-    display: none;
-    padding: 10px 24px;
-    background: var(--rain-dim);
-    border: 1px solid var(--rain);
-    color: var(--rain);
-    border-radius: 8px;
-    font-size: 14px;
-    cursor: pointer;
-  }
+/* ══════════════════════════════════
+   레이더 탭
+══════════════════════════════════ */
+#page-radar { padding: 16px 14px 0; }
+.radar-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.radar-img-box {
+  border-radius: var(--radius); overflow: hidden;
+  border: 1px solid var(--gray3); background: var(--gray2);
+  aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center;
+  position: relative; margin-bottom: 10px;
+}
+#radar-img { width: 100%; height: 100%; object-fit: contain; display: none; }
+#radar-img.shown { display: block; }
+#radar-state { font-size: 12px; color: var(--gray5); text-align: center; padding: 0 20px; line-height: 1.7; }
+.radar-ctrl { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+#radar-load {
+  padding: 9px 18px; background: var(--green); color: #fff;
+  border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+#radar-time { font-size: 11px; color: var(--gray5); }
+.radar-link-row { display: flex; flex-direction: column; gap: 8px; }
+.radar-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; background: #fff;
+  border: 1px solid var(--gray3); border-radius: var(--radius-sm);
+  text-decoration: none; color: var(--gray7);
+  box-shadow: var(--shadow);
+}
+.radar-link-icon { font-size: 24px; }
+.radar-link-name { font-size: 14px; font-weight: 700; }
+.radar-link-sub { font-size: 11px; color: var(--gray5); margin-top: 2px; }
 
-  /* ── FOOTER ── */
-  #footer {
-    margin: auto 20px 16px;
-    padding-top: 10px;
-    font-size: 10px;
-    color: var(--text-dim);
-    text-align: center;
-    border-top: 1px solid var(--sky-border);
-  }
-
-  /* ── API KEY PROMPT ── */
-  #api-prompt {
-    position: fixed; inset: 0;
-    background: var(--sky);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 14px; padding: 30px;
-    z-index: 200;
-  }
-  #api-prompt h2 { font-size: 18px; text-align: center; }
-  #api-prompt p  { font-size: 12px; color: var(--text-dim); text-align: center; line-height: 1.7; }
-  #api-key-input {
-    width: 100%; max-width: 340px;
-    padding: 12px 14px;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid var(--sky-border);
-    border-radius: 10px;
-    color: var(--text);
-    font-size: 13px;
-    font-family: var(--mono);
-    outline: none;
-  }
-  #api-key-input:focus { border-color: var(--rain); }
-  #api-key-save {
-    padding: 12px 32px;
-    background: var(--rain);
-    border: none;
-    border-radius: 10px;
-    color: #001a33;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    max-width: 340px; width: 100%;
-  }
-  #api-key-save:hover { opacity: 0.9; }
-  #api-key-link { font-size: 11px; color: var(--rain); }
+/* ══════════════════════════════════
+   설정 탭
+══════════════════════════════════ */
+#page-settings { padding: 16px 14px 0; }
+.set-desc { font-size: 12px; color: var(--gray5); margin: 4px 0 16px; line-height: 1.6; }
+.mode-opt {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 16px; background: #fff;
+  border: 1.5px solid var(--gray3); border-radius: var(--radius-sm);
+  margin-bottom: 10px; cursor: pointer; box-shadow: var(--shadow);
+}
+.mode-opt.active { border-color: var(--green); background: var(--green-light); }
+.mo-icon { font-size: 26px; }
+.mo-body { flex: 1; }
+.mo-name { font-size: 15px; font-weight: 700; color: var(--gray7); }
+.mo-sub { font-size: 11px; color: var(--gray5); margin-top: 3px; line-height: 1.5; }
+.mo-check { font-size: 20px; color: var(--green); opacity: 0; }
+.mode-opt.active .mo-check { opacity: 1; }
 </style>
 </head>
 <body>
 
-<!-- API KEY SETUP — Worker 방식으로 불필요 -->
-
-<!-- LOADING OVERLAY -->
+<!-- 로딩 -->
 <div id="overlay">
   <div class="loader"></div>
   <div id="overlay-msg">위치 확인 중…</div>
@@ -426,808 +377,726 @@
   <button id="retry-btn">다시 시도</button>
 </div>
 
-<!-- ══ 장소 검색 오버레이 ══ -->
+<!-- 검색 오버레이 -->
 <div id="search-overlay">
-  <div class="search-top">
+  <div class="search-topbar">
     <input id="search-input" type="search" placeholder="골프장·지역명 검색" autocomplete="off">
     <button id="search-close">✕</button>
   </div>
-  <div class="search-hint">예) 이스트밸리, 남서울CC, 곤지암읍</div>
+  <div class="search-hint">예) 이스트밸리, 남서울CC, 곤지암</div>
   <div id="search-results"></div>
 </div>
 
-<!-- ══ PAGE: 날씨 ══ -->
+<!-- ══ 날씨 탭 ══ -->
 <div id="page-weather" class="page active">
   <div id="header">
+    <button id="loc-btn">
+      <span id="location-name">위치 확인 중</span>
+      <span class="caret">▾</span>
+    </button>
     <div>
-      <button id="loc-btn">
-        <span id="location-name">—</span>
-        <span class="caret">▾</span>
-      </button>
+      <div class="header-right">
+        <button class="icon-btn" id="search-btn">🔍</button>
+        <button class="icon-btn" id="refresh-btn">↻</button>
+      </div>
       <div id="update-time">—</div>
     </div>
-    <button id="refresh-btn" title="새로고침">↻</button>
   </div>
 
-  <div id="golfer-card" class="lv1">
-    <div id="golfer-svg"></div>
-    <div id="golfer-text">
-      <div id="golfer-label">—</div>
-      <div id="golfer-sub">—</div>
-      <div id="golfer-rain"></div>
+  <!-- 골프지수 카드 -->
+  <div id="golf-card">
+    <div id="golf-card-top" class="lv1">
+      <div id="golfer-svg"></div>
+      <div>
+        <div id="golf-grade">—</div>
+        <div id="golf-temp-row">
+          <span id="golf-temp">—</span>
+          <span id="golf-minmax"></span>
+        </div>
+      </div>
     </div>
+    <div id="golf-summary">—</div>
   </div>
 
+  <!-- 시간별 예보 -->
+  <div id="hourly-wrap">
+    <div class="section-title">시간별 예보</div>
+    <div id="hourly-scroll"></div>
+  </div>
+
+  <!-- 핵심 수치 -->
   <div id="metrics">
-    <div class="metric-card" id="card-rain">
-      <div class="metric-label">강수</div>
-      <div class="metric-value" id="m-pty">—</div>
-      <div class="metric-unit">형태</div>
+    <div class="m-card" id="card-rain">
+      <div class="m-label">강수형태</div>
+      <div class="m-val" id="m-pty">—</div>
     </div>
-    <div class="metric-card" id="card-rn1">
-      <div class="metric-label">1h 강수량</div>
-      <div class="metric-value" id="m-rn1">—</div>
-      <div class="metric-unit">mm</div>
+    <div class="m-card" id="card-lgt">
+      <div class="m-label">낙뢰</div>
+      <div class="m-val" id="m-lgt">—</div>
     </div>
-    <div class="metric-card" id="card-lgt">
-      <div class="metric-label">낙뢰</div>
-      <div class="metric-value" id="m-lgt">—</div>
-      <div class="metric-unit">수준</div>
-    </div>
-    <div class="metric-card" id="card-wsd">
-      <div class="metric-label">풍속</div>
-      <div class="metric-value" id="m-wsd">—</div>
-      <div class="metric-unit">m/s</div>
+    <div class="m-card" id="card-wsd">
+      <div class="m-label">풍속</div>
+      <div class="m-val" id="m-wsd">—</div>
+      <div class="m-unit">m/s</div>
     </div>
   </div>
 
-  <div id="timeline-wrap">
-    <div id="timeline-title">향후 6시간 · 라운드 컨디션</div>
-    <div id="timeline"></div>
+  <!-- 주간예보 -->
+  <div id="weekly-wrap">
+    <div class="section-title">주간예보</div>
+    <div id="weekly-list"></div>
   </div>
 
-  <div id="secondary">
-    <div class="sec-card">
-      <div class="sec-label">기온</div>
-      <div><span class="sec-val" id="s-t1h">—</span><span class="sec-unit"> ℃</span></div>
-    </div>
-    <div class="sec-card">
-      <div class="sec-label">습도</div>
-      <div><span class="sec-val" id="s-reh">—</span><span class="sec-unit"> %</span></div>
-    </div>
-    <div class="sec-card">
-      <div class="sec-label">동서바람</div>
-      <div><span class="sec-val" id="s-uuu">—</span><span class="sec-unit"> m/s</span></div>
-    </div>
-    <div class="sec-card">
-      <div class="sec-label">남북바람</div>
-      <div><span class="sec-val" id="s-vvv">—</span><span class="sec-unit"> m/s</span></div>
-    </div>
+  <!-- 낙뢰 배너 -->
+  <div id="thunder-banner">
+    <div class="t-icon">⚡</div>
+    <div class="t-msg">낙뢰 감지됨<br>클럽하우스로 즉시 대피하세요</div>
   </div>
 
-  <div id="thunder-section">
-    <div class="lbl">⚡ 낙뢰 감지됨</div>
-    <div class="sub" id="thunder-msg">현재 주변에 낙뢰가 감지되고 있습니다. 야외 활동을 즉시 중단하고 실내로 이동하세요.</div>
-  </div>
-
-  <div id="footer">
-    ※ 라운드 가능 여부는 코스 배수 상태·관리 방침에 따라 다를 수 있습니다.<br>
-    실제 운영 여부는 해당 골프장에 문의하세요.<br><br>
-    기상청 초단기예보 · KMA Open API
+  <div id="page-weather-footer">
+    ※ 라운드 가능 여부는 코스 배수 상태에 따라 다를 수 있습니다.<br>
+    기상청 초단기·단기예보 · KMA Open API
   </div>
 </div>
 
-<!-- ══ PAGE: 레이더 ══ -->
-<div id="page-radar" class="page">
-  <div class="radar-title">🛰️ 레이더 영상</div>
-  <div class="radar-desc">기상청 레이더 영상을 새 탭으로 열어 확인하세요.<br>실시간 비구름 이동과 낙뢰 위치를 볼 수 있습니다.</div>
-
-  <a class="radar-btn rain" href="https://www.weather.go.kr/w/weather/radar/rdr-hsp.do" target="_blank">
-    <div class="radar-btn-icon">🌧</div>
-    <div>
-      <div class="radar-btn-label">강수 레이더</div>
-      <div class="radar-btn-sub">비구름 위치·강도·이동 방향</div>
-    </div>
-  </a>
-
-  <a class="radar-btn thunder" href="https://www.weather.go.kr/w/weather/radar/rdr-lgt.do" target="_blank">
-    <div class="radar-btn-icon">⚡</div>
-    <div>
-      <div class="radar-btn-label">낙뢰 레이더</div>
-      <div class="radar-btn-sub">실시간 낙뢰 감지 위치</div>
-    </div>
-  </a>
-
-  <a class="radar-btn" href="https://www.weather.go.kr/w/weather/radar/rain.do" target="_blank">
-    <div class="radar-btn-icon">📡</div>
-    <div>
-      <div class="radar-btn-label">레이더 강수 예측</div>
-      <div class="radar-btn-sub">향후 강수 예측 애니메이션</div>
-    </div>
-  </a>
-
-  <div class="radar-tip">
-    💡 <strong>골프장 야외활동 팁</strong><br>
-    강수 레이더에서 비구름이 이동하는 방향을 보고 30분~1시간 내 도달 여부를 판단하세요.<br>
-    낙뢰가 반경 10km 이내 접근 시 즉시 클럽하우스로 대피하세요.
-  </div>
-</div>
-
-<!-- ══ 탭 바 ══ -->
-<!-- ══ PAGE: 준비물 ══ -->
+<!-- ══ 준비물 탭 ══ -->
 <div id="page-check" class="page">
   <div class="check-head">
-    <div class="check-title">🎒 라운드 준비물</div>
+    <div class="page-title">🎒 라운드 준비물</div>
     <button id="check-reset">전체 해제</button>
   </div>
-  <div class="check-desc">골퍼들이 자주 깜빡하는 순서대로 정렬했습니다. 챙긴 항목을 눌러 지우세요.</div>
+  <div class="check-subdesc">자주 깜빡하는 순서로 정렬했습니다. 챙긴 항목을 눌러 체크하세요.</div>
   <div id="check-progress-wrap"><div id="check-progress"></div></div>
   <div id="check-grid"></div>
 </div>
 
-<!-- ══ PAGE: 설정 ══ -->
-<div id="page-settings" class="page">
-  <div class="set-title">⚙️ 모드 설정</div>
-  <div class="set-desc">용도에 맞게 화면 구성을 바꿉니다.</div>
+<!-- ══ 레이더 탭 ══ -->
+<div id="page-radar" class="page">
+  <div class="radar-title-row">
+    <div class="page-title">🛰️ 레이더</div>
+    <button id="radar-load" style="padding:8px 16px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">영상 불러오기</button>
+  </div>
+  <div class="radar-img-box">
+    <img id="radar-img" alt="">
+    <div id="radar-state">위 버튼을 눌러 레이더 영상을 불러오세요</div>
+  </div>
+  <div id="radar-time" style="font-size:11px;color:var(--gray5);margin-bottom:10px;"></div>
+  <div class="radar-link-row">
+    <a class="radar-link" href="https://www.weather.go.kr/w/weather/radar/rdr-hsp.do" target="_blank">
+      <div class="radar-link-icon">🌧</div>
+      <div><div class="radar-link-name">강수 레이더</div><div class="radar-link-sub">비구름 위치·이동 방향</div></div>
+    </a>
+    <a class="radar-link" href="https://www.weather.go.kr/w/weather/radar/rdr-lgt.do" target="_blank">
+      <div class="radar-link-icon">⚡</div>
+      <div><div class="radar-link-name">낙뢰 레이더</div><div class="radar-link-sub">실시간 낙뢰 감지 위치</div></div>
+    </a>
+  </div>
+</div>
 
+<!-- ══ 설정 탭 ══ -->
+<div id="page-settings" class="page">
+  <div class="page-title">⚙️ 설정</div>
+  <div class="set-desc">용도에 맞게 화면을 조정합니다.</div>
   <div class="mode-opt active" data-mode="golf">
     <div class="mo-icon">⛳</div>
     <div class="mo-body">
       <div class="mo-name">골프 모드</div>
-      <div class="mo-sub">라운드 컨디션 캐릭터 · 준비물 체크리스트 포함</div>
+      <div class="mo-sub">골프지수 · 준비물 탭 포함</div>
     </div>
     <div class="mo-check">●</div>
   </div>
-
   <div class="mode-opt" data-mode="normal">
     <div class="mo-icon">🌤️</div>
     <div class="mo-body">
       <div class="mo-name">일반 모드</div>
-      <div class="mo-sub">일반 야외활동 기준 · 준비물 탭 숨김</div>
+      <div class="mo-sub">일반 야외활동 기준</div>
     </div>
     <div class="mo-check">●</div>
   </div>
 </div>
 
+<!-- 탭바 -->
 <div id="tab-bar">
-  <button class="tab-btn active" data-page="page-weather">
-    <span class="tab-icon">🌤️</span>
-    <span>날씨</span>
-  </button>
-  <button class="tab-btn" id="tab-check" data-page="page-check">
-    <span class="tab-icon">🎒</span>
-    <span>준비물</span>
-  </button>
-  <button class="tab-btn" data-page="page-radar">
-    <span class="tab-icon">🛰️</span>
-    <span>레이더</span>
-  </button>
-  <button class="tab-btn" data-page="page-settings">
-    <span class="tab-icon">⚙️</span>
-    <span>설정</span>
-  </button>
+  <button class="tab-btn active" data-page="page-weather"><span class="tab-icon">🌤️</span><span>날씨</span></button>
+  <button class="tab-btn" id="tab-check" data-page="page-check"><span class="tab-icon">🎒</span><span>준비물</span></button>
+  <button class="tab-btn" data-page="page-radar"><span class="tab-icon">🛰️</span><span>레이더</span></button>
+  <button class="tab-btn" data-page="page-settings"><span class="tab-icon">⚙️</span><span>설정</span></button>
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════
-   Lambert 격자 변환
-═══════════════════════════════════════════════ */
+/* ── Worker URL ── */
+const WORKER_URL = 'https://kma-proxy.kojilkojil5.workers.dev';
+
+/* ── Lambert 변환 ── */
 function latLonToGrid(lat, lon) {
   const RE=6371.00877,GRID=5.0,SLAT1=30.0,SLAT2=60.0,OLON=126.0,OLAT=38.0,XO=43,YO=136;
-  const DEGRAD=Math.PI/180.0;
-  const re=RE/GRID;
-  const slat1=SLAT1*DEGRAD,slat2=SLAT2*DEGRAD,olon=OLON*DEGRAD,olat=OLAT*DEGRAD;
-  let sn=Math.tan(Math.PI*0.25+slat2*0.5)/Math.tan(Math.PI*0.25+slat1*0.5);
+  const DEGRAD=Math.PI/180;
+  const re=RE/GRID, slat1=SLAT1*DEGRAD, slat2=SLAT2*DEGRAD, olon=OLON*DEGRAD, olat=OLAT*DEGRAD;
+  let sn=Math.tan(Math.PI*.25+slat2*.5)/Math.tan(Math.PI*.25+slat1*.5);
   sn=Math.log(Math.cos(slat1)/Math.cos(slat2))/Math.log(sn);
-  let sf=Math.tan(Math.PI*0.25+slat1*0.5);
-  sf=Math.pow(sf,sn)*Math.cos(slat1)/sn;
-  let ro=Math.tan(Math.PI*0.25+olat*0.5);
-  ro=re*sf/Math.pow(ro,sn);
-  let ra=Math.tan(Math.PI*0.25+lat*DEGRAD*0.5);
-  ra=re*sf/Math.pow(ra,sn);
+  let sf=Math.pow(Math.tan(Math.PI*.25+slat1*.5),sn)*Math.cos(slat1)/sn;
+  let ro=re*sf/Math.pow(Math.tan(Math.PI*.25+olat*.5),sn);
+  let ra=re*sf/Math.pow(Math.tan(Math.PI*.25+lat*DEGRAD*.5),sn);
   let theta=lon*DEGRAD-olon;
-  if(theta>Math.PI)theta-=2.0*Math.PI;
-  if(theta<-Math.PI)theta+=2.0*Math.PI;
+  if(theta>Math.PI)theta-=2*Math.PI; if(theta<-Math.PI)theta+=2*Math.PI;
   theta*=sn;
-  return{nx:Math.floor(ra*Math.sin(theta)+XO+0.5),ny:Math.floor(ro-ra*Math.cos(theta)+YO+0.5)};
+  return{nx:Math.floor(ra*Math.sin(theta)+XO+.5),ny:Math.floor(ro-ra*Math.cos(theta)+YO+.5)};
 }
 
-/* ═══════════════════════════════════════════════
-   base_time 계산
-═══════════════════════════════════════════════ */
+/* ── base_time ── */
 function getBaseDateTime(offsetMin=55){
-  const d=new Date(new Date().getTime()-offsetMin*60*1000);
-  const pad=n=>String(n).padStart(2,'0');
+  const d=new Date(Date.now()-offsetMin*60000);
+  const p=n=>String(n).padStart(2,'0');
+  return{base_date:`${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}`,base_time:`${p(d.getHours())}30`};
+}
+function getVilageFcstBase(){
+  // 단기예보는 02/05/08/11/14/17/20/23시 발표
+  const d=new Date(Date.now()-60*60000); // 1시간 여유
+  const p=n=>String(n).padStart(2,'0');
+  const h=d.getHours();
+  const bases=[2,5,8,11,14,17,20,23];
+  let base=bases.filter(b=>b<=h).pop();
+  if(base===undefined){base=23; d.setDate(d.getDate()-1);}
   return{
-    base_date:`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`,
-    base_time:`${pad(d.getHours())}30`
+    base_date:`${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}`,
+    base_time:`${p(base)}00`
   };
 }
 
-/* ═══════════════════════════════════════════════
-   코드 변환
-═══════════════════════════════════════════════ */
-const PTY_LABEL={'0':'없음','1':'비','2':'비/눈','3':'눈','4':'소나기','5':'빗방울','6':'빗방울/눈','7':'눈날림'};
-const PTY_ICON={'0':'✓','1':'🌧','2':'🌨','3':'❄️','4':'⛈','5':'🌦','6':'🌨','7':'🌨'};
+/* ── 코드 변환 ── */
+const PTY_TXT={'0':'없음','1':'비','2':'비/눈','3':'눈','4':'소나기','5':'빗방울','6':'빗방울/눈','7':'눈날림'};
 const SKY_ICON={'1':'☀️','3':'⛅','4':'☁️'};
-function getPtyLabel(v){return PTY_LABEL[v]||'—';}
-function getWeatherIcon(pty,sky){if(pty&&pty!=='0')return PTY_ICON[pty]||'🌧';return SKY_ICON[sky]||'🌤';}
-function getRainBarColor(pty){if(!pty||pty==='0')return'rgba(255,255,255,0.15)';if(['4','1'].includes(pty))return'#4da6ff';if(['2','5','6'].includes(pty))return'#7ef7c8';return'#b8d4ff';}
+const PTY_ICON={'0':'','1':'🌧','2':'🌨','3':'❄️','4':'⛈','5':'🌦','6':'🌨','7':'🌨'};
+function weatherIcon(pty,sky){return(pty&&pty!=='0')?PTY_ICON[pty]||'🌧':SKY_ICON[sky]||'🌤️';}
 
-/* ═══════════════════════════════════════════════
-   골퍼 캐릭터 SVG (3단계)
-═══════════════════════════════════════════════ */
+/* ── 골프지수 4단계 ── */
 const GOLFER_SVG = {
-  // Lv1 — 웃으며 피니시 자세
-  lv1: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="50" cy="50" r="46" fill="rgba(82,217,138,0.10)"/>
-    <!-- 클럽 (피니시로 넘어간 상태) -->
-    <line x1="52" y1="52" x2="26" y2="22" stroke="#cfd8e8" stroke-width="3" stroke-linecap="round"/>
-    <!-- 몸통 (회전된 피니시) -->
-    <path d="M50 52 L50 72" stroke="#f0f4ff" stroke-width="7" stroke-linecap="round"/>
-    <!-- 팔 -->
-    <path d="M50 56 L38 46" stroke="#f0f4ff" stroke-width="5" stroke-linecap="round"/>
-    <!-- 다리 (피니시: 오른발 세움) -->
-    <path d="M50 72 L42 88" stroke="#f0f4ff" stroke-width="6" stroke-linecap="round"/>
-    <path d="M50 72 L60 84 L64 88" stroke="#f0f4ff" stroke-width="6" stroke-linecap="round" fill="none"/>
-    <!-- 머리 -->
-    <circle cx="52" cy="40" r="11" fill="#f0f4ff"/>
-    <!-- 모자 챙 -->
-    <path d="M41 36 Q52 27 63 36" stroke="#52d98a" stroke-width="4" fill="none" stroke-linecap="round"/>
-    <!-- 웃는 눈 (^ ^) -->
-    <path d="M46 40 Q48 37.5 50 40" stroke="#0a1628" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-    <path d="M55 40 Q57 37.5 59 40" stroke="#0a1628" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-    <!-- 활짝 웃는 입 -->
-    <path d="M48 45 Q52.5 49 57 45" stroke="#0a1628" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  lv1:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <line x1="52" y1="52" x2="26" y2="22" stroke="rgba(255,255,255,0.8)" stroke-width="3" stroke-linecap="round"/>
+    <path d="M50 52 L50 72" stroke="rgba(255,255,255,0.9)" stroke-width="7" stroke-linecap="round"/>
+    <path d="M50 56 L38 46" stroke="rgba(255,255,255,0.9)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M50 72 L42 88" stroke="rgba(255,255,255,0.9)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M50 72 L60 84 L64 88" stroke="rgba(255,255,255,0.9)" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <circle cx="52" cy="40" r="11" fill="#fff"/>
+    <path d="M41 36 Q52 27 63 36" stroke="rgba(255,255,255,0.6)" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M46 40 Q48 37.5 50 40" stroke="#2eaf6e" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M55 40 Q57 37.5 59 40" stroke="#2eaf6e" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M48 45 Q52.5 49 57 45" stroke="#2eaf6e" stroke-width="1.8" fill="none" stroke-linecap="round"/>
   </svg>`,
-
-  // Lv2 — 약간 시무룩, 우산 든 자세
-  lv2: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="50" cy="50" r="46" fill="rgba(255,184,77,0.10)"/>
-    <!-- 빗방울 -->
-    <line x1="22" y1="20" x2="20" y2="27" stroke="#4da6ff" stroke-width="2.2" stroke-linecap="round" opacity="0.75"/>
-    <line x1="34" y1="15" x2="32" y2="22" stroke="#4da6ff" stroke-width="2.2" stroke-linecap="round" opacity="0.75"/>
-    <line x1="72" y1="18" x2="70" y2="25" stroke="#4da6ff" stroke-width="2.2" stroke-linecap="round" opacity="0.75"/>
-    <!-- 우산 -->
-    <path d="M28 34 Q46 18 64 34 Z" fill="#ffb84d" opacity="0.9"/>
-    <line x1="46" y1="34" x2="46" y2="56" stroke="#cfd8e8" stroke-width="2.5" stroke-linecap="round"/>
-    <!-- 몸통 -->
-    <path d="M54 54 L54 72" stroke="#f0f4ff" stroke-width="7" stroke-linecap="round"/>
-    <!-- 우산 든 팔 -->
-    <path d="M54 57 L46 54" stroke="#f0f4ff" stroke-width="5" stroke-linecap="round"/>
-    <!-- 다리 -->
-    <path d="M54 72 L47 88" stroke="#f0f4ff" stroke-width="6" stroke-linecap="round"/>
-    <path d="M54 72 L61 88" stroke="#f0f4ff" stroke-width="6" stroke-linecap="round"/>
-    <!-- 머리 -->
-    <circle cx="54" cy="43" r="11" fill="#f0f4ff"/>
-    <!-- 모자 챙 -->
-    <path d="M43 39 Q54 30 65 39" stroke="#ffb84d" stroke-width="4" fill="none" stroke-linecap="round"/>
-    <!-- 시무룩한 눈 -->
-    <circle cx="50" cy="43" r="1.6" fill="#0a1628"/>
-    <circle cx="58" cy="43" r="1.6" fill="#0a1628"/>
-    <!-- 살짝 처진 입 -->
-    <path d="M50 49 Q54 46.5 58 49" stroke="#0a1628" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  lv2:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <line x1="22" y1="20" x2="20" y2="27" stroke="#aee" stroke-width="2.2" stroke-linecap="round" opacity="0.7"/>
+    <line x1="34" y1="15" x2="32" y2="22" stroke="#aee" stroke-width="2.2" stroke-linecap="round" opacity="0.7"/>
+    <line x1="72" y1="18" x2="70" y2="25" stroke="#aee" stroke-width="2.2" stroke-linecap="round" opacity="0.7"/>
+    <path d="M28 34 Q46 18 64 34 Z" fill="rgba(255,255,255,0.4)"/>
+    <line x1="46" y1="34" x2="46" y2="56" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M54 54 L54 72" stroke="rgba(255,255,255,0.9)" stroke-width="7" stroke-linecap="round"/>
+    <path d="M54 57 L46 54" stroke="rgba(255,255,255,0.9)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M54 72 L47 88" stroke="rgba(255,255,255,0.9)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M54 72 L61 88" stroke="rgba(255,255,255,0.9)" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="54" cy="43" r="11" fill="#fff"/>
+    <path d="M43 39 Q54 30 65 39" stroke="rgba(255,255,255,0.6)" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <circle cx="50" cy="43" r="1.6" fill="#2eaf6e"/>
+    <circle cx="58" cy="43" r="1.6" fill="#2eaf6e"/>
+    <path d="M50 49 Q54 46.5 58 49" stroke="#2eaf6e" stroke-width="1.8" fill="none" stroke-linecap="round"/>
   </svg>`,
-
-  // Lv3 — 우는 표정, 클럽 내려놓음
-  lv3: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="50" cy="50" r="46" fill="rgba(255,94,94,0.10)"/>
-    <!-- 굵은 빗줄기 -->
-    <line x1="18" y1="12" x2="14" y2="26" stroke="#4da6ff" stroke-width="2.8" stroke-linecap="round" opacity="0.85"/>
-    <line x1="32" y1="8"  x2="28" y2="22" stroke="#4da6ff" stroke-width="2.8" stroke-linecap="round" opacity="0.85"/>
-    <line x1="50" y1="10" x2="46" y2="24" stroke="#4da6ff" stroke-width="2.8" stroke-linecap="round" opacity="0.85"/>
-    <line x1="68" y1="8"  x2="64" y2="22" stroke="#4da6ff" stroke-width="2.8" stroke-linecap="round" opacity="0.85"/>
-    <line x1="82" y1="12" x2="78" y2="26" stroke="#4da6ff" stroke-width="2.8" stroke-linecap="round" opacity="0.85"/>
-    <!-- 땅에 내려놓은 클럽 -->
-    <line x1="20" y1="86" x2="42" y2="82" stroke="#8794ab" stroke-width="3" stroke-linecap="round"/>
-    <!-- 축 처진 몸통 -->
-    <path d="M56 56 L56 74" stroke="#f0f4ff" stroke-width="7" stroke-linecap="round"/>
-    <!-- 축 늘어진 팔 -->
-    <path d="M56 59 L48 68" stroke="#f0f4ff" stroke-width="5" stroke-linecap="round"/>
-    <path d="M56 59 L64 68" stroke="#f0f4ff" stroke-width="5" stroke-linecap="round"/>
-    <!-- 다리 -->
-    <path d="M56 74 L49 89" stroke="#f0f4ff" stroke-width="6" stroke-linecap="round"/>
-    <path d="M56 74 L63 89" stroke="#f0f4ff" stroke-width="6" stroke-linecap="round"/>
-    <!-- 고개 숙인 머리 -->
-    <circle cx="56" cy="45" r="11" fill="#f0f4ff"/>
-    <!-- 모자 챙 -->
-    <path d="M45 42 Q56 33 67 42" stroke="#ff5e5e" stroke-width="4" fill="none" stroke-linecap="round"/>
-    <!-- 우는 눈 (> <) -->
-    <path d="M50 44 Q52.5 46.5 55 44" stroke="#0a1628" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-    <path d="M58 44 Q60.5 46.5 63 44" stroke="#0a1628" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-    <!-- 눈물 -->
-    <circle cx="51" cy="49" r="1.6" fill="#4da6ff"/>
-    <circle cx="62" cy="49" r="1.6" fill="#4da6ff"/>
-    <!-- 우는 입 -->
-    <path d="M52 52 Q56.5 48 61 52" stroke="#0a1628" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  lv3:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <line x1="22" y1="18" x2="19" y2="28" stroke="#aee" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+    <line x1="38" y1="13" x2="35" y2="23" stroke="#aee" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+    <line x1="60" y1="12" x2="57" y2="22" stroke="#aee" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+    <line x1="78" y1="16" x2="75" y2="26" stroke="#aee" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+    <path d="M56 56 L56 74" stroke="rgba(255,255,255,0.9)" stroke-width="7" stroke-linecap="round"/>
+    <path d="M56 59 L48 68" stroke="rgba(255,255,255,0.9)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M56 59 L64 68" stroke="rgba(255,255,255,0.9)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M56 74 L49 89" stroke="rgba(255,255,255,0.9)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M56 74 L63 89" stroke="rgba(255,255,255,0.9)" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="56" cy="45" r="11" fill="#fff"/>
+    <path d="M45 42 Q56 33 67 42" stroke="rgba(255,255,255,0.6)" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <circle cx="51" cy="44" r="1.6" fill="#f5a623"/>
+    <circle cx="61" cy="44" r="1.6" fill="#f5a623"/>
+    <circle cx="51" cy="49" r="1.4" fill="#7ec8e3" opacity="0.8"/>
+    <circle cx="62" cy="49" r="1.4" fill="#7ec8e3" opacity="0.8"/>
+    <path d="M52 52 Q57 48 62 52" stroke="#f5a623" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  </svg>`,
+  lv4:`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <line x1="16" y1="10" x2="12" y2="26" stroke="#aee" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+    <line x1="34" y1="6"  x2="30" y2="22" stroke="#aee" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+    <line x1="52" y1="8" x2="48" y2="24" stroke="#aee" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+    <line x1="70" y1="6"  x2="66" y2="22" stroke="#aee" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+    <line x1="86" y1="10" x2="82" y2="26" stroke="#aee" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+    <line x1="20" y1="86" x2="42" y2="82" stroke="rgba(255,255,255,0.5)" stroke-width="3" stroke-linecap="round"/>
+    <path d="M56 56 L56 74" stroke="rgba(255,255,255,0.9)" stroke-width="7" stroke-linecap="round"/>
+    <path d="M56 59 L48 68" stroke="rgba(255,255,255,0.9)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M56 59 L64 68" stroke="rgba(255,255,255,0.9)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M56 74 L49 89" stroke="rgba(255,255,255,0.9)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M56 74 L63 89" stroke="rgba(255,255,255,0.9)" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="56" cy="45" r="11" fill="#fff"/>
+    <path d="M45 42 Q56 33 67 42" stroke="rgba(255,255,255,0.6)" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M50 44 Q52.5 46.5 55 44" stroke="#e8534a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M58 44 Q60.5 46.5 63 44" stroke="#e8534a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <circle cx="51" cy="49" r="1.8" fill="#7ec8e3"/>
+    <circle cx="62" cy="49" r="1.8" fill="#7ec8e3"/>
+    <path d="M52 53 Q57 48 62 53" stroke="#e8534a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
   </svg>`
 };
 
-/* ═══════════════════════════════════════════════
-   골프 라운드 판정 — 3단계
-   ※ 코스 상태·배수 여건에 따라 실제와 다를 수 있음
-═══════════════════════════════════════════════ */
-function getGolfCondition(cur) {
-  const pty    = cur['PTY'] || '0';
-  const lgt    = cur['LGT'] || '0';
-  const wsd    = parseFloat(cur['WSD'] || 0);
-  const rn1raw = cur['RN1'] || '강수없음';
-  const rain   = rn1raw === '강수없음' ? 0 : parseFloat(rn1raw) || 0;
+const GRADES = {
+  lv1:{label:'최적',cls:'lv1',badge:'badge-lv1'},
+  lv2:{label:'양호',cls:'lv2',badge:'badge-lv2'},
+  lv3:{label:'보통',cls:'lv3',badge:'badge-lv3'},
+  lv4:{label:'부담',cls:'lv4',badge:'badge-lv4'},
+  lvX:{label:'위험',cls:'lvX',badge:'badge-lv4'},
+};
 
-  // 낙뢰는 강수량과 무관하게 최우선
-  const golf = (typeof appMode === 'undefined') || appMode === 'golf';
+let appMode = localStorage.getItem('app_mode')||'golf';
 
-  if (lgt !== '0') {
-    return {
-      lv: 'lv3',
-      label: '⚡ 즉시 중단',
-      sub: golf ? '낙뢰 감지 — 클럽하우스로 대피하세요'
-                : '낙뢰 감지 — 즉시 실내로 대피하세요',
-      rain
-    };
-  }
+function golfGrade(cur){
+  const pty=cur['PTY']||'0', lgt=cur['LGT']||'0';
+  const wsd=parseFloat(cur['WSD']||0);
+  const raw=cur['RN1']||'강수없음';
+  const rain=raw==='강수없음'?0:parseFloat(raw)||0;
+  const isGolf=appMode==='golf';
 
-  // 강수량 3단계
-  if (rain >= 5 || pty === '4') {
-    return {
-      lv: 'lv3',
-      label: golf ? '라운드 어려움' : '야외활동 어려움',
-      sub: golf ? '강한 비가 예상됩니다. 코스 상태를 확인하세요'
-                : '강한 비가 예상됩니다',
-      rain
-    };
-  }
-  if (rain >= 1 || ['1','2','3','5','6','7'].includes(pty)) {
-    return {
-      lv: 'lv2',
-      label: '가능하지만 아쉬움',
-      sub: golf ? '우산·우비를 챙기세요. 그립이 미끄러울 수 있습니다'
-                : '우산·우비를 챙기세요',
-      rain
-    };
-  }
-  if (wsd >= 10) {
-    return {
-      lv: 'lv2',
-      label: '바람이 강합니다',
-      sub: '방풍 자켓을 준비하세요',
-      rain
-    };
-  }
-
-  return {
-    lv: 'lv1',
-    label: golf ? '라운드 하기 좋아요' : '야외활동 하기 좋아요',
-    sub: '기상 조건이 양호합니다',
-    rain
-  };
+  if(lgt!=='0')return{...GRADES.lvX,
+    sub:isGolf?'⚡ 낙뢰 감지 — 클럽하우스로 즉시 대피':'⚡ 낙뢰 감지 — 실내로 즉시 대피',thunder:true};
+  if(rain>=5||pty==='4')return{...GRADES.lv4,
+    sub:isGolf?'강한 비 — 코스 운영 여부를 확인하세요':'강한 비가 예상됩니다',thunder:false};
+  if(rain>=1||['1','2','3','5','6','7'].includes(pty))return{...GRADES.lv3,
+    sub:isGolf?'우산·우비 권장 | 그립 미끄럼 주의':'우산·우비를 준비하세요',thunder:false};
+  if(wsd>=10)return{...GRADES.lv3,
+    sub:'강풍 | 방풍 자켓 권장',thunder:false};
+  if(wsd>=5)return{...GRADES.lv2,
+    sub:isGolf?'클럽 편차 주의 | 라운드 가능':'바람 있음 — 야외활동 양호',thunder:false};
+  return{...GRADES.lv1,
+    sub:isGolf?'라운드 최적 | 클럽 편차없음 | 바람 약함':'야외활동 최적 조건',thunder:false};
 }
 
-/* ═══════════════════════════════════════════════
-   역지오코딩
-═══════════════════════════════════════════════ */
+function gradeForDaily(sky, pop, pty){
+  const r=parseFloat(pop)||0;
+  const p=pty||'0';
+  if(['1','4'].includes(p)||r>=70)return GRADES.lv4;
+  if(['2','3','5','6','7'].includes(p)||r>=40)return GRADES.lv3;
+  if(r>=20||sky==='4')return GRADES.lv2;
+  return GRADES.lv1;
+}
+
+/* ── 역지오코딩 ── */
 async function reverseGeocode(lat,lon){
   try{
     const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,{headers:{'Accept-Language':'ko'}});
-    const d=await r.json();
-    const a=d.address||{};
+    const d=await r.json(); const a=d.address||{};
     return a.city_district||a.suburb||a.village||a.town||a.city||a.county||'현재 위치';
   }catch{return'현재 위치';}
 }
 
-/* ═══════════════════════════════════════════════
-   Cloudflare Worker URL — 여기만 수정하면 됩니다
-═══════════════════════════════════════════════ */
-const WORKER_URL = 'https://kma-proxy.kojilkojil5.workers.dev';
-
-/* ═══════════════════════════════════════════════
-   API 호출 (Worker 경유)
-═══════════════════════════════════════════════ */
-async function fetchForecast(nx, ny) {
-  const {base_date, base_time} = getBaseDateTime(55);
-  const url = `${WORKER_URL}/forecast?nx=${nx}&ny=${ny}&base_date=${base_date}&base_time=${base_time}`;
-  const res  = await fetch(url, {signal: AbortSignal.timeout(10000)});
-  if (!res.ok) throw new Error(`서버 오류: ${res.status}`);
-  const data = await res.json();
-  if (data.response?.header?.resultCode !== '00') {
-    throw new Error(data.response?.header?.resultMsg || 'API 오류');
-  }
+/* ── API 호출 ── */
+async function fetchForecast(nx,ny){
+  const{base_date,base_time}=getBaseDateTime(55);
+  const url=`${WORKER_URL}/forecast?nx=${nx}&ny=${ny}&base_date=${base_date}&base_time=${base_time}`;
+  const res=await fetch(url,{signal:AbortSignal.timeout(12000)});
+  if(!res.ok)throw new Error(`서버 오류 ${res.status}`);
+  const data=await res.json();
+  if(data.response?.header?.resultCode!=='00')throw new Error(data.response?.header?.resultMsg||'API 오류');
   return data.response.body.items.item;
 }
 
-/* ═══════════════════════════════════════════════
-   UI 렌더
-═══════════════════════════════════════════════ */
-/* 타임라인용 미니 표정 */
-function getMiniFace(slot) {
-  const pty  = slot['PTY'] || '0';
-  const lgt  = slot['LGT'] || '0';
-  const raw  = slot['RN1'] || '강수없음';
-  const rain = raw === '강수없음' ? 0 : parseFloat(raw) || 0;
-  if (lgt !== '0') return '⚡';
-  if (rain >= 5 || pty === '4') return '😭';
-  if (rain >= 1 || pty !== '0')  return '😕';
-  return '😀';
+async function fetchWeekly(nx,ny){
+  try{
+    const{base_date,base_time}=getVilageFcstBase();
+    const url=`${WORKER_URL}/forecast?nx=${nx}&ny=${ny}&base_date=${base_date}&base_time=${base_time}&type=vilage`;
+    // Worker의 /forecast는 UltraSrtFcst만 지원하므로 직접 allorigins 프록시 사용
+    const apiUrl=`https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst`
+      +`?base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`
+      +`&numOfRows=1000&pageNo=1&dataType=JSON`;
+    const proxyUrl=`https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl+'&serviceKey='+encodeURIComponent(getApiKey()))}`;
+    const res=await fetch(proxyUrl,{signal:AbortSignal.timeout(10000)});
+    const data=await res.json();
+    if(data.response?.header?.resultCode!=='00')return null;
+    return data.response.body.items.item;
+  }catch{return null;}
 }
 
-function renderUI(items,locationName){
+// Worker 환경변수에 키가 있으므로 클라이언트에서 직접 호출 시 Worker /vilage 경유 필요
+// 지금은 Worker에 /vilage가 없으므로 일단 생략, 추후 추가
+async function fetchWeeklyViaWorker(nx,ny){
+  try{
+    const{base_date,base_time}=getVilageFcstBase();
+    const url=`${WORKER_URL}/vilage?nx=${nx}&ny=${ny}&base_date=${base_date}&base_time=${base_time}`;
+    const res=await fetch(url,{signal:AbortSignal.timeout(12000)});
+    if(!res.ok)return null;
+    const data=await res.json();
+    if(data.response?.header?.resultCode!=='00')return null;
+    return data.response.body.items.item;
+  }catch{return null;}
+}
+
+/* ── UI 렌더 ── */
+function renderUI(items, locationName){
   const now=new Date();
-  const pad=n=>String(n).padStart(2,'0');
+  const p=n=>String(n).padStart(2,'0');
   document.getElementById('location-name').textContent=locationName;
   document.getElementById('update-time').textContent=
-    `${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())} 기준`;
-  const nowHHMM=`${pad(now.getHours())}00`;
+    `${now.getFullYear()}.${p(now.getMonth()+1)}.${p(now.getDate())} ${p(now.getHours())}:${p(now.getMinutes())} 기준`;
+
+  // 시각별 그룹화
   const byTime={};
-  for(const item of items){
-    const key=item.fcstDate+item.fcstTime;
-    if(!byTime[key])byTime[key]={};
-    byTime[key][item.category]=item.fcstValue;
+  for(const it of items){
+    const k=it.fcstDate+it.fcstTime;
+    if(!byTime[k])byTime[k]={};
+    byTime[k][it.category]=it.fcstValue;
   }
   const times=Object.keys(byTime).sort();
-  const currentKey=times.find(k=>k>=`${items[0]?.fcstDate}${nowHHMM}`)||times[0];
-  const cur=byTime[currentKey]||{};
+  const nowKey=`${items[0]?.fcstDate}${p(now.getHours())}00`;
+  const curKey=times.find(k=>k>=nowKey)||times[0];
+  const cur=byTime[curKey]||{};
 
-  const cond = getGolfCondition(cur);
-  const card = document.getElementById('golfer-card');
-  card.className = cond.lv;
-  document.getElementById('golfer-svg').innerHTML = GOLFER_SVG[cond.lv];
-  document.getElementById('golfer-label').textContent = cond.label;
-  document.getElementById('golfer-sub').textContent   = cond.sub;
-  document.getElementById('golfer-rain').textContent  =
-    cond.rain > 0 ? `예상 강수량 ${cond.rain}mm/h` : '';
+  // 골프지수
+  const grade=golfGrade(cur);
+  const top=document.getElementById('golf-card-top');
+  top.className=grade.cls;
+  document.getElementById('golfer-svg').innerHTML=GOLFER_SVG[grade.cls]||GOLFER_SVG.lv4;
+  document.getElementById('golf-grade').textContent=grade.label;
+  document.getElementById('golf-temp').textContent=`${cur['T1H']||'—'}°C`;
+  document.getElementById('golf-minmax').textContent=`습도 ${cur['REH']||'—'}%`;
+  document.getElementById('golf-summary').textContent=grade.sub;
 
-  const pty=cur['PTY']||'0',rn1=cur['RN1']||'강수없음',lgt=cur['LGT']||'0',wsd=cur['WSD']||'—';
-  document.getElementById('m-pty').textContent=getPtyLabel(pty);
-  document.getElementById('m-rn1').textContent=rn1==='강수없음'?'0':rn1;
-  document.getElementById('m-lgt').textContent=lgt==='0'?'없음':'⚡감지';
-  document.getElementById('m-wsd').textContent=wsd;
-  document.getElementById('card-lgt').className=`metric-card${lgt!=='0'?' thunder-alert':''}`;
-  document.getElementById('card-wsd').className=`metric-card${parseFloat(wsd)>=10?' wind-alert':''}`;
-  document.getElementById('card-rain').className=`metric-card${pty!=='0'?' rain-alert':''}`;
-  document.getElementById('thunder-section').className=lgt!=='0'?'visible':'';
-  document.getElementById('s-t1h').textContent=cur['T1H']||'—';
-  document.getElementById('s-reh').textContent=cur['REH']||'—';
-  document.getElementById('s-uuu').textContent=cur['UUU']||'—';
-  document.getElementById('s-vvv').textContent=cur['VVV']||'—';
+  // 낙뢰
+  document.getElementById('thunder-banner').className=grade.thunder?'show':'';
 
-  const tl=document.getElementById('timeline');
-  tl.innerHTML='';
-  const show=times.slice(times.indexOf(currentKey),times.indexOf(currentKey)+6);
-  const maxRain=Math.max(...show.map(k=>{const v=byTime[k]['RN1']||'0';return v==='강수없음'?0:parseFloat(v)||0;}),1);
-  for(const t of show){
+  // 핵심 수치
+  const pty=cur['PTY']||'0', lgt=cur['LGT']||'0', wsd=parseFloat(cur['WSD']||0);
+  document.getElementById('m-pty').textContent=PTY_TXT[pty]||'없음';
+  document.getElementById('m-lgt').textContent=lgt!=='0'?'⚡감지':'없음';
+  document.getElementById('m-wsd').textContent=cur['WSD']||'—';
+  document.getElementById('card-lgt').className='m-card'+(lgt!=='0'?' alert-thunder':'');
+  document.getElementById('card-wsd').className='m-card'+(wsd>=10?' alert-wind':'');
+  document.getElementById('card-rain').className='m-card'+(pty!=='0'?' alert-rain':'');
+
+  // 시간별 예보 (3시간 간격, 최대 8개)
+  const scroll=document.getElementById('hourly-scroll');
+  scroll.innerHTML='';
+  let count=0;
+  for(const t of times){
+    if(count>=8)break;
+    const h=parseInt(t.slice(8,10));
+    if(t!==curKey && h%3!==0)continue; // 현재 시각 + 3시간 간격
     const slot=byTime[t];
-    const hh=t.slice(8,10),mm=t.slice(10,12);
-    const tPty=slot['PTY']||'0',tSky=slot['SKY']||'1',tTemp=slot['T1H']||'—';
-    const tRain=slot['RN1']||'강수없음';
-    const tRainVal=tRain==='강수없음'?0:parseFloat(tRain)||0;
-    const barPct=Math.min(tRainVal/maxRain*100,100);
+    const isNow=t===curKey;
+    const hh=t.slice(8,10), rain=slot['RN1']||'강수없음';
+    const rainVal=rain==='강수없음'?0:parseFloat(rain)||0;
+    const pPty=slot['PTY']||'0', pSky=slot['SKY']||'1';
+
+    // 미니 판정
+    let face='😀';
+    if(slot['LGT']&&slot['LGT']!=='0')face='⚡';
+    else if(rainVal>=5||pPty==='4')face='😭';
+    else if(rainVal>=1||pPty!=='0')face='😕';
+
     const el=document.createElement('div');
-    el.className='tl-slot';
+    el.className='h-slot'+(isNow?' now':'');
     el.innerHTML=`
-      <div class="tl-time">${hh}:${mm}</div>
-      <div class="tl-icon">${getMiniFace(slot)}</div>
-      <div class="tl-temp">${tTemp}°</div>
-      <div class="tl-rain">${tRainVal>0?tRainVal+'mm':''}</div>
-      <div class="tl-bar-wrap"><div class="tl-bar" style="width:${barPct}%;background:${getRainBarColor(tPty)}"></div></div>
+      <div class="h-time">${isNow?'지금':hh+'시'}</div>
+      <div class="h-face">${face}</div>
+      <div class="h-temp">${slot['T1H']||'—'}°</div>
+      <div class="h-rain">${rainVal>0?rainVal+'mm':''}</div>
     `;
-    tl.appendChild(el);
+    scroll.appendChild(el);
+    count++;
   }
 }
 
-/* ═══════════════════════════════════════════════
-   탭 전환
-═══════════════════════════════════════════════ */
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.page).classList.add('active');
-  });
-});
+function renderWeekly(items){
+  const list=document.getElementById('weekly-list');
+  list.innerHTML='';
+  if(!items){
+    list.innerHTML='<div style="font-size:12px;color:var(--gray5);text-align:center;padding:16px">주간예보를 불러오지 못했습니다.</div>';
+    return;
+  }
+  // 날짜별 최저/최고/sky/pop 집계
+  const byDate={};
+  for(const it of items){
+    const d=it.fcstDate;
+    if(!byDate[d])byDate[d]={temps:[],sky:'1',pop:'0',pty:'0'};
+    if(it.category==='TMP')byDate[d].temps.push(parseFloat(it.fcstValue));
+    if(it.category==='SKY'&&it.fcstTime==='1200')byDate[d].sky=it.fcstValue;
+    if(it.category==='POP'){const v=parseFloat(it.fcstValue)||0; if(v>parseFloat(byDate[d].pop))byDate[d].pop=it.fcstValue;}
+    if(it.category==='PTY'&&it.fcstTime==='1200')byDate[d].pty=it.fcstValue;
+  }
+  const DAYS=['일','월','화','수','목','금','토'];
+  let cnt=0;
+  for(const [date,d] of Object.entries(byDate).sort()){
+    if(cnt>=7)break;
+    const mn=d.temps.length?Math.round(Math.min(...d.temps)):null;
+    const mx=d.temps.length?Math.round(Math.max(...d.temps)):null;
+    const dow=DAYS[new Date(date.slice(0,4),date.slice(4,6)-1,date.slice(6,8)).getDay()];
+    const grade=gradeForDaily(d.sky,d.pop,d.pty);
+    const icon=weatherIcon(d.pty,d.sky);
+    const row=document.createElement('div');
+    row.className='w-row';
+    row.innerHTML=`
+      <div class="w-day"><div class="w-dow">${dow}</div><div class="w-date">${date.slice(4,6)}/${date.slice(6,8)}</div></div>
+      <div class="w-grade-badge ${grade.badge}">${grade.label}</div>
+      <div class="w-icon">${icon}</div>
+      <div class="w-temps">
+        <span class="w-max">${mx!==null?mx+'°':'—'}</span>
+        <span class="w-min">${mn!==null?mn+'°':'—'}</span>
+        ${d.pop!=='0'?`<div class="w-pop">🌧 ${d.pop}%</div>`:''}
+      </div>
+    `;
+    list.appendChild(row);
+    cnt++;
+  }
+}
 
-/* ═══════════════════════════════════════════════
-   메인 흐름
-═══════════════════════════════════════════════ */
-const overlay    = document.getElementById('overlay');
-const overlayMsg = document.getElementById('overlay-msg');
-const overlayErr = document.getElementById('overlay-err');
-const retryBtn   = document.getElementById('retry-btn');
+/* ── 메인 흐름 ── */
+const overlay=document.getElementById('overlay');
+let selectedPlace=null;
 
-function showOverlay(msg) {
+function showOverlay(msg){
   overlay.classList.remove('hidden');
-  overlayMsg.textContent = msg;
-  overlayMsg.style.display = 'block';
-  overlayErr.style.display = 'none';
-  retryBtn.style.display = 'none';
-  document.querySelector('.loader').style.display = 'block';
+  document.getElementById('overlay-msg').textContent=msg;
+  document.getElementById('overlay-msg').style.display='block';
+  document.getElementById('overlay-err').style.display='none';
+  document.getElementById('retry-btn').style.display='none';
+  document.querySelector('.loader').style.display='block';
 }
-function hideOverlay() { overlay.classList.add('hidden'); }
-function showError(msg) {
-  document.querySelector('.loader').style.display = 'none';
-  overlayMsg.style.display = 'none';
-  overlayErr.style.display = 'block';
-  overlayErr.textContent = msg;
-  retryBtn.style.display = 'block';
+function hideOverlay(){overlay.classList.add('hidden');}
+function showError(msg){
+  document.querySelector('.loader').style.display='none';
+  document.getElementById('overlay-msg').style.display='none';
+  const e=document.getElementById('overlay-err');
+  e.style.display='block'; e.textContent=msg;
+  document.getElementById('retry-btn').style.display='block';
 }
 
-/* 현재 선택된 장소. null이면 GPS 사용 */
-let selectedPlace = null;   // { name, lat, lon }
-
-async function loadWeather() {
-  try {
-    let lat, lon, name;
-
-    if (selectedPlace) {
-      lat  = selectedPlace.lat;
-      lon  = selectedPlace.lon;
-      name = selectedPlace.name;
+async function loadWeather(){
+  try{
+    let lat,lon,name;
+    if(selectedPlace){
+      lat=selectedPlace.lat; lon=selectedPlace.lon; name=selectedPlace.name;
       showOverlay('날씨 데이터 불러오는 중…');
-    } else {
+    }else{
       showOverlay('위치 확인 중…');
-      const pos = await new Promise((res, rej) =>
-        navigator.geolocation.getCurrentPosition(res, rej, {
-          timeout: 30000, maximumAge: 60000, enableHighAccuracy: false
-        })
-      );
-      lat = pos.coords.latitude;
-      lon = pos.coords.longitude;
+      const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:30000,maximumAge:60000,enableHighAccuracy:false}));
+      lat=pos.coords.latitude; lon=pos.coords.longitude;
       showOverlay('날씨 데이터 불러오는 중…');
-      name = await reverseGeocode(lat, lon);
+      name=await reverseGeocode(lat,lon);
     }
-
-    const {nx, ny} = latLonToGrid(lat, lon);
-    const items = await fetchForecast(nx, ny);
-    renderUI(items, name);
+    const{nx,ny}=latLonToGrid(lat,lon);
+    const [items, weeklyItems]=await Promise.all([fetchForecast(nx,ny), fetchWeeklyViaWorker(nx,ny)]);
+    renderUI(items,name);
+    renderWeekly(weeklyItems);
     hideOverlay();
     document.getElementById('refresh-btn').classList.remove('spinning');
-  } catch(e) {
-    let msg = e.message || '알 수 없는 오류';
-    if (e.code === 1) msg = '위치 권한이 거부되었습니다.\n브라우저 설정에서 위치 권한을 허용하거나,\n장소명을 직접 검색해 주세요.';
-    else if (e.code === 3) msg = '위치 정보 요청 시간이 초과되었습니다.\n장소명을 직접 검색해 보세요.';
-    else if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-      msg = '날씨 서버에 연결하지 못했습니다.\n네트워크 상태를 확인하거나 잠시 후 다시 시도해 주세요.';
-    }
+  }catch(e){
+    let msg=e.message||'오류';
+    if(e.code===1)msg='위치 권한이 거부되었습니다.\n설정에서 허용하거나 장소를 검색해 주세요.';
+    else if(e.code===3)msg='위치 요청 시간이 초과되었습니다.\n장소를 직접 검색해 주세요.';
+    else if(msg.includes('Failed to fetch'))msg='서버에 연결하지 못했습니다.\n잠시 후 다시 시도해 주세요.';
     showError(msg);
     document.getElementById('refresh-btn').classList.remove('spinning');
   }
 }
 
-document.getElementById('refresh-btn').addEventListener('click', () => {
+document.getElementById('refresh-btn').addEventListener('click',()=>{
   document.getElementById('refresh-btn').classList.add('spinning');
   loadWeather();
 });
-retryBtn.addEventListener('click', loadWeather);
+document.getElementById('retry-btn').addEventListener('click',loadWeather);
 
-/* ═══════════════════════════════════════════════
-   장소 검색 · 즐겨찾기
-═══════════════════════════════════════════════ */
-const FAV_KEY = 'golf_fav_places';
-const searchOverlay = document.getElementById('search-overlay');
-const searchInput   = document.getElementById('search-input');
-const searchResults = document.getElementById('search-results');
+/* ── 장소 검색 ── */
+const FAV_KEY='golf_fav_v2';
+const searchOverlay=document.getElementById('search-overlay');
+const searchInput=document.getElementById('search-input');
+const searchResults=document.getElementById('search-results');
 
-function getFavs() {
-  try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; }
-  catch { return []; }
-}
-function saveFavs(list) {
-  localStorage.setItem(FAV_KEY, JSON.stringify(list));
-}
-function isFav(p) {
-  return getFavs().some(f => f.name === p.name);
-}
-function toggleFav(p) {
-  const favs = getFavs();
-  const i = favs.findIndex(f => f.name === p.name);
-  if (i >= 0) favs.splice(i, 1);
-  else favs.push(p);
-  saveFavs(favs);
-}
+function getFavs(){try{return JSON.parse(localStorage.getItem(FAV_KEY))||[];}catch{return[];}}
+function saveFavs(list){localStorage.setItem(FAV_KEY,JSON.stringify(list));}
+function isFav(p){return getFavs().some(f=>f.name===p.name);}
+function toggleFav(p){const favs=getFavs();const i=favs.findIndex(f=>f.name===p.name);if(i>=0)favs.splice(i,1);else favs.push(p);saveFavs(favs);}
 
-function placeRow(p, {star = true, icon = '⛳'} = {}) {
-  const row = document.createElement('div');
-  row.className = 'place-row';
-  row.innerHTML = `
+function makePlaceRow(p,icon='⛳'){
+  const row=document.createElement('div');
+  row.className='place-row';
+  const hasTel=p.tel&&p.tel.trim();
+  row.innerHTML=`
     <div class="place-icon">${icon}</div>
     <div class="place-body">
       <div class="place-name"></div>
-      ${p.addr ? '<div class="place-addr"></div>' : ''}
+      ${p.addr?'<div class="place-addr"></div>':''}
+      ${hasTel?'<div class="place-tel">📞 <span class="tel-text"></span></div>':''}
     </div>
-    ${star ? `<button class="place-star">${isFav(p) ? '★' : '☆'}</button>` : ''}
+    <div class="place-actions">
+      <button class="place-star">${isFav(p)?'★':'☆'}</button>
+      ${hasTel?`<a class="place-call" href="tel:${p.tel.replace(/[^0-9]/g,'')}">📞 전화</a>`:''}
+    </div>
   `;
-  row.querySelector('.place-name').textContent = p.name;
-  if (p.addr) row.querySelector('.place-addr').textContent = p.addr;
+  row.querySelector('.place-name').textContent=p.name;
+  if(p.addr)row.querySelector('.place-addr').textContent=p.addr;
+  if(hasTel)row.querySelector('.tel-text').textContent=p.tel;
 
-  row.addEventListener('click', () => {
-    selectedPlace = {name: p.name, lat: p.lat, lon: p.lon};
-    closeSearch();
-    loadWeather();
+  row.addEventListener('click',e=>{
+    if(e.target.closest('.place-star')||e.target.closest('.place-call'))return;
+    selectedPlace={name:p.name,lat:p.lat,lon:p.lon};
+    closeSearch(); loadWeather();
   });
 
-  const starBtn = row.querySelector('.place-star');
-  if (starBtn) {
-    starBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      toggleFav({name: p.name, lat: p.lat, lon: p.lon, addr: p.addr});
-      starBtn.textContent = isFav(p) ? '★' : '☆';
-      if (!searchInput.value.trim()) renderSearchHome();
-    });
-  }
+  const star=row.querySelector('.place-star');
+  star.addEventListener('click',e=>{
+    e.stopPropagation();
+    toggleFav({name:p.name,lat:p.lat,lon:p.lon,addr:p.addr,tel:p.tel||''});
+    star.textContent=isFav(p)?'★':'☆';
+    if(!searchInput.value.trim())renderSearchHome();
+  });
   return row;
 }
 
-function renderSearchHome() {
-  searchResults.innerHTML = '';
+function renderSearchHome(){
+  searchResults.innerHTML='';
+  const gps=document.createElement('div');
+  gps.className='place-row';
+  gps.innerHTML='<div class="place-icon">📍</div><div class="place-body"><div class="place-name">현재 위치 사용</div><div class="place-addr">GPS로 자동 감지</div></div>';
+  gps.addEventListener('click',()=>{selectedPlace=null;closeSearch();loadWeather();});
+  searchResults.appendChild(gps);
 
-  const gpsRow = document.createElement('div');
-  gpsRow.className = 'place-row';
-  gpsRow.innerHTML = `
-    <div class="place-icon">📍</div>
-    <div class="place-body"><div class="place-name">현재 위치 사용</div></div>
-  `;
-  gpsRow.addEventListener('click', () => {
-    selectedPlace = null;
-    closeSearch();
-    loadWeather();
-  });
-  searchResults.appendChild(gpsRow);
-
-  const favs = getFavs();
-  if (favs.length) {
-    const t = document.createElement('div');
-    t.className = 'search-sec-title';
-    t.textContent = '즐겨찾기';
+  const favs=getFavs();
+  if(favs.length){
+    const t=document.createElement('div');
+    t.className='search-sec-title'; t.textContent='즐겨찾기';
     searchResults.appendChild(t);
-    favs.forEach(f => searchResults.appendChild(placeRow(f)));
+    favs.forEach(f=>searchResults.appendChild(makePlaceRow(f)));
   }
 }
 
-let searchTimer = null;
-async function runSearch(q) {
-  searchResults.innerHTML = '<div class="search-msg">검색 중…</div>';
-  try {
-    const url = `https://nominatim.openstreetmap.org/search`
-      + `?q=${encodeURIComponent(q)}&format=json&countrycodes=kr&limit=8&accept-language=ko`;
-    const res  = await fetch(url, {headers: {'Accept-Language': 'ko'}});
-    const list = await res.json();
-
-    if (!list.length) {
-      searchResults.innerHTML =
-        '<div class="search-msg">검색 결과가 없습니다.<br>골프장 정식 명칭이나 인근 지역명(읍·면·동)으로<br>다시 검색해 보세요.</div>';
-      return;
+let searchTimer=null;
+async function runSearch(q){
+  searchResults.innerHTML='<div class="search-msg">검색 중…</div>';
+  try{
+    const url=`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+' 골프')}&format=json&countrycodes=kr&limit=8&accept-language=ko&addressdetails=1`;
+    const res=await fetch(url,{headers:{'Accept-Language':'ko'}});
+    const list=await res.json();
+    if(!list.length){
+      // 골프 없이 재검색
+      const url2=`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&countrycodes=kr&limit=8&accept-language=ko&addressdetails=1`;
+      const res2=await fetch(url2,{headers:{'Accept-Language':'ko'}});
+      const list2=await res2.json();
+      if(!list2.length){searchResults.innerHTML='<div class="search-msg">검색 결과가 없습니다.<br>골프장명 또는 인근 지역명으로 검색해 보세요.</div>';return;}
+      renderSearchList(list2,'📌');return;
     }
-
-    searchResults.innerHTML = '';
-    list.forEach(r => {
-      const full = r.display_name || '';
-      const name = full.split(',')[0].trim();
-      const addr = full.split(',').slice(1, 4).join(',').trim();
-      searchResults.appendChild(placeRow(
-        {name, addr, lat: parseFloat(r.lat), lon: parseFloat(r.lon)},
-        {icon: '📌'}
-      ));
-    });
-  } catch {
-    searchResults.innerHTML = '<div class="search-msg">검색에 실패했습니다.<br>잠시 후 다시 시도해 주세요.</div>';
-  }
+    renderSearchList(list,'⛳');
+  }catch{searchResults.innerHTML='<div class="search-msg">검색에 실패했습니다.<br>잠시 후 다시 시도해 주세요.</div>';}
 }
 
-searchInput.addEventListener('input', () => {
-  const q = searchInput.value.trim();
+function renderSearchList(list,icon){
+  searchResults.innerHTML='';
+  list.forEach(r=>{
+    const full=r.display_name||'';
+    const name=full.split(',')[0].trim();
+    const addr=full.split(',').slice(1,4).join(' ').trim();
+    const tel=r.extratags?.phone||r.extratags?.['contact:phone']||'';
+    searchResults.appendChild(makePlaceRow({name,addr,lat:parseFloat(r.lat),lon:parseFloat(r.lon),tel},icon));
+  });
+}
+
+searchInput.addEventListener('input',()=>{
+  const q=searchInput.value.trim();
   clearTimeout(searchTimer);
-  if (q.length < 2) { renderSearchHome(); return; }
-  searchTimer = setTimeout(() => runSearch(q), 500);
+  if(q.length<2){renderSearchHome();return;}
+  searchTimer=setTimeout(()=>runSearch(q),500);
 });
 
-function openSearch() {
-  searchOverlay.classList.add('open');
-  searchInput.value = '';
-  renderSearchHome();
-  setTimeout(() => searchInput.focus(), 100);
-}
-function closeSearch() { searchOverlay.classList.remove('open'); }
+function openSearch(){searchOverlay.classList.add('open');searchInput.value='';renderSearchHome();setTimeout(()=>searchInput.focus(),100);}
+function closeSearch(){searchOverlay.classList.remove('open');}
 
-document.getElementById('loc-btn').addEventListener('click', openSearch);
-document.getElementById('search-close').addEventListener('click', closeSearch);
+document.getElementById('loc-btn').addEventListener('click',openSearch);
+document.getElementById('search-btn').addEventListener('click',openSearch);
+document.getElementById('search-close').addEventListener('click',closeSearch);
 
-/* ═══════════════════════════════════════════════
-   준비물 체크리스트
-   순서 = 골퍼들이 자주 깜빡하는 순
-═══════════════════════════════════════════════ */
-const CHECK_ITEMS = [
-  {id:'glove',  emoji:'🧤', name:'장갑'},
-  {id:'ball',   emoji:'🏌️', name:'여분 볼'},
-  {id:'tee',    emoji:'📍', name:'티'},
-  {id:'marker', emoji:'🪙', name:'볼마커'},
-  {id:'shoes',  emoji:'👟', name:'골프화'},
-  {id:'sun',    emoji:'🧴', name:'선크림'},
-  {id:'cap',    emoji:'🧢', name:'모자'},
-  {id:'towel',  emoji:'🧻', name:'수건'},
-  {id:'rain',   emoji:'☂️', name:'우산·우비'},
-  {id:'cloth',  emoji:'👕', name:'여벌 옷'},
-  {id:'water',  emoji:'💧', name:'물·간식'},
-  {id:'range',  emoji:'📏', name:'거리측정기'},
+/* ── 준비물 ── */
+const CHECK_ITEMS=[
+  {id:'glove',emoji:'🧤',name:'장갑'},
+  {id:'ball',emoji:'🏌️',name:'여분 볼'},
+  {id:'tee',emoji:'📍',name:'티'},
+  {id:'marker',emoji:'🪙',name:'볼마커'},
+  {id:'shoes',emoji:'👟',name:'골프화'},
+  {id:'sun',emoji:'🧴',name:'선크림'},
+  {id:'cap',emoji:'🧢',name:'모자'},
+  {id:'towel',emoji:'🧻',name:'수건'},
+  {id:'rain',emoji:'☂️',name:'우산·우비'},
+  {id:'cloth',emoji:'👕',name:'여벌 옷'},
+  {id:'water',emoji:'💧',name:'물·간식'},
+  {id:'range',emoji:'📏',name:'거리측정기'},
 ];
-
-const CHECK_KEY = 'golf_checklist';
-function getChecked() {
-  try { return JSON.parse(localStorage.getItem(CHECK_KEY)) || []; }
-  catch { return []; }
-}
-function setChecked(list) {
-  localStorage.setItem(CHECK_KEY, JSON.stringify(list));
-}
-
-function renderChecklist() {
-  const grid = document.getElementById('check-grid');
-  const done = getChecked();
-  grid.innerHTML = '';
-
-  CHECK_ITEMS.forEach((it, idx) => {
-    const el = document.createElement('div');
-    el.className = 'check-item' + (done.includes(it.id) ? ' done' : '');
-    el.innerHTML = `
-      <div class="ci-rank">${idx + 1}</div>
-      <div class="ci-emoji">${it.emoji}</div>
-      <div class="ci-name">${it.name}</div>
-    `;
-    el.addEventListener('click', () => {
-      const cur = getChecked();
-      const i = cur.indexOf(it.id);
-      if (i >= 0) cur.splice(i, 1); else cur.push(it.id);
-      setChecked(cur);
-      renderChecklist();
+const CHECK_KEY='golf_check_v2';
+function getChecked(){try{return JSON.parse(localStorage.getItem(CHECK_KEY))||[];}catch{return[];}}
+function setChecked(list){localStorage.setItem(CHECK_KEY,JSON.stringify(list));}
+function renderChecklist(){
+  const grid=document.getElementById('check-grid');
+  const done=getChecked();
+  grid.innerHTML='';
+  CHECK_ITEMS.forEach((it,idx)=>{
+    const el=document.createElement('div');
+    el.className='check-item'+(done.includes(it.id)?' done':'');
+    el.innerHTML=`<div class="ci-rank">${idx+1}</div><div class="ci-emoji">${it.emoji}</div><div class="ci-name">${it.name}</div>`;
+    el.addEventListener('click',()=>{
+      const cur=getChecked();const i=cur.indexOf(it.id);
+      if(i>=0)cur.splice(i,1);else cur.push(it.id);
+      setChecked(cur);renderChecklist();
     });
     grid.appendChild(el);
   });
-
-  const pct = Math.round(done.length / CHECK_ITEMS.length * 100);
-  document.getElementById('check-progress').style.width = pct + '%';
+  const pct=Math.round(getChecked().length/CHECK_ITEMS.length*100);
+  document.getElementById('check-progress').style.width=pct+'%';
 }
-
-document.getElementById('check-reset').addEventListener('click', () => {
-  setChecked([]);
-  renderChecklist();
-});
+document.getElementById('check-reset').addEventListener('click',()=>{setChecked([]);renderChecklist();});
 renderChecklist();
 
-/* ═══════════════════════════════════════════════
-   모드 (골프 / 일반)
-═══════════════════════════════════════════════ */
-const MODE_KEY = 'app_mode';
-let appMode = localStorage.getItem(MODE_KEY) || 'golf';
-
-function applyMode() {
-  document.getElementById('tab-check').style.display =
-    appMode === 'golf' ? 'flex' : 'none';
-
-  document.getElementById('timeline-title').textContent =
-    appMode === 'golf' ? '향후 6시간 · 라운드 컨디션' : '향후 6시간';
-
-  document.querySelectorAll('.mode-opt').forEach(o => {
-    o.classList.toggle('active', o.dataset.mode === appMode);
-  });
-
-  // 준비물 탭이 숨겨졌는데 그 페이지에 있으면 날씨로 이동
-  if (appMode !== 'golf' &&
-      document.getElementById('page-check').classList.contains('active')) {
-    document.querySelector('.tab-btn[data-page="page-weather"]').click();
-  }
-}
-
-document.querySelectorAll('.mode-opt').forEach(opt => {
-  opt.addEventListener('click', () => {
-    appMode = opt.dataset.mode;
-    localStorage.setItem(MODE_KEY, appMode);
-    applyMode();
-    loadWeather();
+/* ── 탭 전환 ── */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.page).classList.add('active');
   });
 });
 
+/* ── 모드 ── */
+function applyMode(){
+  document.getElementById('tab-check').style.display=appMode==='golf'?'flex':'none';
+  document.querySelectorAll('.mode-opt').forEach(o=>o.classList.toggle('active',o.dataset.mode===appMode));
+  if(appMode!=='golf'&&document.getElementById('page-check').classList.contains('active'))
+    document.querySelector('.tab-btn[data-page="page-weather"]').click();
+}
+document.querySelectorAll('.mode-opt').forEach(opt=>{
+  opt.addEventListener('click',()=>{appMode=opt.dataset.mode;localStorage.setItem('app_mode',appMode);applyMode();loadWeather();});
+});
 applyMode();
 
-// Worker 방식: API 키 불필요 — 바로 시작
+/* ── 레이더 ── */
+function radarTimeStr(back){
+  const d=new Date(Date.now()-back*60000);
+  const p=n=>String(n).padStart(2,'0');
+  const m5=Math.floor(d.getMinutes()/5)*5;
+  return`${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}${p(d.getHours())}${p(m5)}`;
+}
+async function loadRadar(){
+  const img=document.getElementById('radar-img');
+  const state=document.getElementById('radar-state');
+  const tEl=document.getElementById('radar-time');
+  img.classList.remove('shown'); state.style.display='block'; state.textContent='불러오는 중…';
+  for(const back of[15,20,25,30,40]){
+    const t=radarTimeStr(back);
+    const src=`${WORKER_URL}/radar?time=${t}&cmp=HSR&obs=ECHO&zoom=1`;
+    const ok=await new Promise(res=>{const probe=new Image();probe.onload=()=>res(true);probe.onerror=()=>res(false);probe.src=src;});
+    if(ok){img.src=src;img.classList.add('shown');state.style.display='none';tEl.textContent=`${t.slice(4,6)}/${t.slice(6,8)} ${t.slice(8,10)}:${t.slice(10,12)} 기준`;return;}
+  }
+  state.textContent='레이더 영상을 불러오지 못했습니다.\n레이더영상 API 활용신청이 필요할 수 있습니다.';
+  tEl.textContent='';
+}
+document.getElementById('radar-load').addEventListener('click',loadRadar);
+
+/* ── 시작 ── */
+function getApiKey(){return '';}// Worker에서 관리하므로 불필요
 loadWeather();
 </script>
 </body>
