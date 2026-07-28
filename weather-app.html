@@ -471,25 +471,20 @@ body {
 </div>
 
 <!-- ══ 레이더 탭 ══ -->
-<div id="page-radar" class="page">
-  <div class="radar-title-row">
+<div id="page-radar" class="page" style="padding:0;flex:1;display:none;flex-direction:column;">
+  <div style="padding:14px 14px 10px;background:#fff;border-bottom:1px solid var(--gray3);display:flex;justify-content:space-between;align-items:center;">
     <div class="page-title">🛰️ 레이더</div>
-    <button id="radar-load" style="padding:8px 16px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">영상 불러오기</button>
+    <button id="radar-locate-btn" style="padding:7px 14px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📍 내 위치로</button>
   </div>
-  <div class="radar-img-box">
-    <img id="radar-img" alt="">
-    <div id="radar-state">위 버튼을 눌러 레이더 영상을 불러오세요</div>
-  </div>
-  <div id="radar-time" style="font-size:11px;color:var(--gray5);margin-bottom:10px;"></div>
-  <div class="radar-link-row">
-    <a class="radar-link" href="https://www.weather.go.kr/w/weather/radar/rdr-hsp.do" target="_blank">
-      <div class="radar-link-icon">🌧</div>
-      <div><div class="radar-link-name">강수 레이더</div><div class="radar-link-sub">비구름 위치·이동 방향</div></div>
-    </a>
-    <a class="radar-link" href="https://www.weather.go.kr/w/weather/radar/rdr-lgt.do" target="_blank">
-      <div class="radar-link-icon">⚡</div>
-      <div><div class="radar-link-name">낙뢰 레이더</div><div class="radar-link-sub">실시간 낙뢰 감지 위치</div></div>
-    </a>
+  <iframe id="windy-frame"
+    src=""
+    style="flex:1;border:none;width:100%;min-height:calc(100dvh - 128px);"
+    allowfullscreen>
+  </iframe>
+  <div style="padding:8px 14px;background:#fff;border-top:1px solid var(--gray3);font-size:10px;color:var(--gray5);text-align:center;">
+    기상 레이더 · Windy.com 제공 | 기상청 레이더 바로가기:
+    <a href="https://www.weather.go.kr/w/weather/radar/rdr-hsp.do" target="_blank" style="color:var(--green);font-weight:700;">강수</a> ·
+    <a href="https://www.weather.go.kr/w/weather/radar/rdr-lgt.do" target="_blank" style="color:var(--green);font-weight:700;">낙뢰</a>
   </div>
 </div>
 
@@ -882,6 +877,7 @@ async function loadWeather(){
       name=await reverseGeocode(lat,lon);
     }
     const{nx,ny}=latLonToGrid(lat,lon);
+    lastLat=lat; lastLon=lon;
     const [items, weeklyItems]=await Promise.all([fetchForecast(nx,ny), fetchWeeklyViaWorker(nx,ny)]);
     renderUI(items,name);
     renderWeekly(weeklyItems);
@@ -1072,32 +1068,49 @@ document.querySelectorAll('.mode-opt').forEach(opt=>{
 });
 applyMode();
 
-/* ── 레이더 ── */
-function radarTimeStr(back){
-  const d=new Date(Date.now()-back*60000);
-  const p=n=>String(n).padStart(2,'0');
-  const m5=Math.floor(d.getMinutes()/5)*5;
-  return`${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}${p(d.getHours())}${p(m5)}`;
+/* ── Windy 레이더 ── */
+let windyLoaded = false;
+let lastLat = 37.0; // 기본값: 한국 중부
+let lastLon = 127.5;
+
+function buildWindyUrl(lat, lon) {
+  // zoom 8 = 광역 레이더 보기에 적당, radar 레이어 기본 설정
+  return `https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&width=650&height=450&zoom=8&level=surface&overlay=rain&product=ecmwf&menu=&message=true&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=m%2Fs&metricTemp=%C2%B0C&radarRange=-1`;
 }
-async function loadRadar(){
-  const img=document.getElementById('radar-img');
-  const state=document.getElementById('radar-state');
-  const tEl=document.getElementById('radar-time');
-  img.classList.remove('shown'); state.style.display='block'; state.textContent='불러오는 중…';
-  for(const back of[15,20,25,30,40]){
-    const t=radarTimeStr(back);
-    const src=`${WORKER_URL}/radar?time=${t}&cmp=HSR&obs=ECHO&zoom=1`;
-    const ok=await new Promise(res=>{const probe=new Image();probe.onload=()=>res(true);probe.onerror=()=>res(false);probe.src=src;});
-    if(ok){img.src=src;img.classList.add('shown');state.style.display='none';tEl.textContent=`${t.slice(4,6)}/${t.slice(6,8)} ${t.slice(8,10)}:${t.slice(10,12)} 기준`;return;}
-  }
-  state.textContent='레이더 영상을 불러오지 못했습니다.\n레이더영상 API 활용신청이 필요할 수 있습니다.';
-  tEl.textContent='';
+
+function loadWindy(lat, lon) {
+  const frame = document.getElementById('windy-frame');
+  frame.src = buildWindyUrl(lat, lon);
+  windyLoaded = true;
 }
-document.getElementById('radar-load').addEventListener('click',loadRadar);
+
+// GPS 위치 갱신될 때마다 좌표 저장
+const _origLoad = loadWeather;
+
+// 탭 전환 시 레이더 탭이면 Windy 로드
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.page === 'page-radar' && !windyLoaded) {
+      loadWindy(lastLat, lastLon);
+    }
+  });
+});
+
+// "내 위치로" 버튼
+document.getElementById('radar-locate-btn').addEventListener('click', () => {
+  navigator.geolocation.getCurrentPosition(pos => {
+    lastLat = pos.coords.latitude;
+    lastLon = pos.coords.longitude;
+    loadWindy(lastLat, lastLon);
+  }, () => {
+    loadWindy(lastLat, lastLon);
+  }, {timeout: 8000, maximumAge: 60000});
+});
 
 /* ── 시작 ── */
-function getApiKey(){return '';}// Worker에서 관리하므로 불필요
+function getApiKey(){return '';}
 loadWeather();
+
 </script>
 </body>
 </html>
