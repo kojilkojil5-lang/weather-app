@@ -31,43 +31,11 @@ body{background:#000;color:var(--g7);font-family:'Apple SD Gothic Neo','Noto San
 #overlay-err{display:none;font-size:13px;color:var(--red);text-align:center;padding:0 30px;line-height:1.6;}
 #retry-btn{display:none;padding:10px 24px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;}
 
-/* ══ 메인 래퍼 ══ */
-#main-wrapper{
-  position:relative;width:100%;height:100dvh;
+/* ══ 메인 = 레이더 ══ */
+#page-radar{
   display:flex;flex-direction:column;
+  height:calc(100dvh - 60px);background:#0a1628;
 }
-
-/* ── Windy 전체화면 ── */
-#windy-frame{
-  position:absolute;inset:0;
-  border:none;width:100%;height:100%;
-  z-index:0;
-}
-
-/* ── 지도 위 상단 HUD ── */
-#map-hud{
-  position:absolute;top:0;left:0;right:0;
-  padding:10px 14px;
-  display:flex;justify-content:space-between;align-items:center;
-  background:linear-gradient(to bottom,rgba(0,0,0,.55) 0%,transparent 100%);
-  z-index:10;pointer-events:none;
-}
-#map-hud .hud-left{pointer-events:auto;}
-#map-hud .hud-right{display:flex;gap:6px;pointer-events:auto;}
-#loc-btn{
-  display:flex;align-items:center;gap:6px;
-  background:rgba(255,255,255,.18);backdrop-filter:blur(6px);
-  border:1px solid rgba(255,255,255,.3);border-radius:20px;
-  padding:7px 13px;cursor:pointer;color:#fff;
-}
-#location-name{font-size:14px;font-weight:700;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-#loc-btn .caret{font-size:9px;opacity:.7;}
-.hud-btn{
-  background:rgba(255,255,255,.18);backdrop-filter:blur(6px);
-  border:1px solid rgba(255,255,255,.3);border-radius:20px;
-  padding:7px 12px;cursor:pointer;color:#fff;font-size:15px;
-}
-
 /* ── 지도 위 하단 날씨 버튼 ── */
 #weather-fab{
   position:absolute;bottom:0;left:0;right:0;
@@ -234,7 +202,59 @@ body{background:#000;color:var(--g7);font-family:'Apple SD Gothic Neo','Noto San
 .check-item.done{opacity:.30;background:var(--green-light);border-color:var(--green-mid);}
 .check-item.done::after{content:'✓';position:absolute;top:6px;right:8px;font-size:13px;color:var(--green);font-weight:900;}
 
-#page-settings{padding:16px 14px 0;}
+/* ── 레이더 헤더 ── */
+#radar-header{
+  padding:12px 16px;background:#fff;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--g3);flex-shrink:0;
+}
+#radar-header-left{display:flex;align-items:center;gap:10px;}
+#radar-title{font-size:16px;font-weight:800;color:var(--g7);}
+#loc-btn{
+  display:flex;align-items:center;gap:5px;
+  background:var(--g2);border:1px solid var(--g3);border-radius:20px;
+  padding:5px 11px;cursor:pointer;color:var(--g7);
+}
+#location-name{font-size:12px;font-weight:700;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#loc-btn .caret{font-size:9px;color:var(--g5);}
+#radar-time-label{font-size:11px;color:var(--g5);font-family:monospace;}
+.icon-btn{background:none;border:none;cursor:pointer;font-size:18px;padding:6px;color:var(--g6);}
+
+/* ── 레이더 캔버스 ── */
+#radar-canvas-wrap{
+  flex:1;position:relative;background:#0a1628;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+#radar-canvas{max-width:100%;max-height:100%;object-fit:contain;display:block;}
+#radar-my-pos{
+  position:absolute;width:14px;height:14px;
+  background:var(--red);border:2.5px solid #fff;border-radius:50%;
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 0 5px rgba(232,83,74,.3);
+  pointer-events:none;display:none;
+}
+#radar-loading{
+  position:absolute;inset:0;background:rgba(10,22,40,.85);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff;
+}
+#radar-loading .r-loader{width:34px;height:34px;border:3px solid rgba(255,255,255,.15);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;}
+#radar-loading p{font-size:13px;opacity:.75;text-align:center;line-height:1.6;padding:0 24px;}
+
+/* ── 레이더 컨트롤 ── */
+#radar-controls{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 16px;background:#fff;
+  border-top:1px solid var(--g3);flex-shrink:0;
+}
+#radar-play-btn{
+  width:42px;height:42px;border-radius:50%;
+  background:var(--green);border:none;color:#fff;
+  font-size:18px;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+#radar-slider{flex:1;accent-color:var(--green);height:4px;}
+#radar-frame-label{font-size:11px;color:var(--g5);font-family:monospace;white-space:nowrap;min-width:36px;text-align:right;}
+
 .set-desc{font-size:12px;color:var(--g5);margin:4px 0 16px;line-height:1.6;}
 .mode-opt{display:flex;align-items:center;gap:14px;padding:16px;background:#fff;border:1.5px solid var(--g3);border-radius:var(--rs);margin-bottom:10px;cursor:pointer;box-shadow:var(--sh);}
 .mode-opt.active{border-color:var(--green);background:var(--green-light);}
@@ -351,38 +371,76 @@ body{background:#000;color:var(--g7);font-family:'Apple SD Gothic Neo','Noto San
   </div>
 </div>
 
-<!-- ══ 메인: Windy 전체화면 ══ -->
-<div id="main-wrapper">
-  <iframe id="windy-frame" src="" allowfullscreen></iframe>
-
-  <!-- 상단 HUD -->
-  <div id="map-hud">
-    <div class="hud-left">
+<!-- ══ 메인: 레이더 ══ -->
+<div id="page-radar" class="page active">
+  <div id="radar-header">
+    <div id="radar-header-left">
       <button id="loc-btn">
         <span id="location-name">위치 확인 중</span>
         <span class="caret">▾</span>
       </button>
+      <button class="icon-btn" id="search-btn">🔍</button>
+      <button class="icon-btn" id="refresh-btn">↻</button>
     </div>
-    <div class="hud-right">
-      <button class="hud-btn" id="search-btn">🔍</button>
-      <button class="hud-btn" id="refresh-btn">↻</button>
+    <div id="radar-time-label">—</div>
+  </div>
+  <div id="radar-canvas-wrap">
+    <img id="radar-canvas" alt="레이더 영상">
+    <div id="radar-my-pos"></div>
+    <div id="radar-loading">
+      <div class="r-loader"></div>
+      <p>레이더 영상 불러오는 중…</p>
     </div>
   </div>
-
-  <!-- 하단 FAB -->
-  <div id="weather-fab">
-    <div id="mini-badge">
-      <div>
-        <div id="mini-grade">—</div>
-        <div id="mini-sub">로딩 중…</div>
-      </div>
-      <div id="mini-temp" style="font-size:22px;font-weight:900;color:#fff;">—</div>
-    </div>
-    <button id="open-detail-btn">날씨 상세보기 <span>↑</span></button>
+  <div id="radar-controls">
+    <button id="radar-play-btn">▶</button>
+    <input id="radar-slider" type="range" min="0" value="0">
+    <div id="radar-frame-label">—</div>
   </div>
 </div>
 
-<!-- ══ 준비물 페이지 ══ -->
+<!-- ══ 날씨 탭 페이지 ══ -->
+<div id="page-weather-tab" class="page" style="display:none;">
+  <!-- 골프지수 카드 -->
+  <div id="golf-card" style="margin:12px 14px 0;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh-md);">
+    <div id="golf-card-top" class="lv1" style="padding:18px 18px 14px;display:flex;align-items:center;gap:14px;">
+      <div id="golfer-svg" style="width:72px;height:72px;flex-shrink:0;"></div>
+      <div>
+        <div id="golf-grade" style="font-size:26px;font-weight:900;color:#fff;">—</div>
+        <div id="golf-temp" style="font-size:14px;color:rgba(255,255,255,.9);margin-top:4px;">—</div>
+      </div>
+    </div>
+    <div id="golf-summary" style="background:rgba(0,0,0,.12);margin:0 12px 12px;border-radius:10px;padding:10px 14px;font-size:12px;color:rgba(255,255,255,.9);line-height:1.6;">—</div>
+  </div>
+
+  <div id="hourly-wrap" style="background:#fff;margin:10px 14px 0;border-radius:var(--r);padding:14px;box-shadow:var(--sh);">
+    <div class="section-title">시간별 예보 (3시간 간격)</div>
+    <div id="hourly-scroll"></div>
+  </div>
+
+  <div id="metrics" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 14px 0;">
+    <div class="m-card" id="card-rain"><div class="m-label">강수형태</div><div class="m-val" id="m-pty">—</div></div>
+    <div class="m-card" id="card-lgt"><div class="m-label">낙뢰</div><div class="m-val" id="m-lgt">—</div></div>
+    <div class="m-card" id="card-wsd"><div class="m-label">풍속</div><div class="m-val" id="m-wsd">—</div><div class="m-unit">m/s</div></div>
+  </div>
+
+  <div id="weekly-wrap" style="background:#fff;margin:10px 14px 0;border-radius:var(--r);padding:14px;box-shadow:var(--sh);">
+    <div class="section-title">주간예보</div>
+    <div id="weekly-list"></div>
+  </div>
+
+  <div id="thunder-banner" style="margin:10px 14px 0;">
+    <div class="t-icon">⚡</div>
+    <div class="t-msg">낙뢰 감지됨<br>클럽하우스로 즉시 대피하세요</div>
+  </div>
+
+  <div style="margin:10px 14px 16px;font-size:10px;color:var(--g4);text-align:center;line-height:1.7;">
+    ※ 라운드 가능 여부는 코스 배수 상태에 따라 다를 수 있습니다.<br>
+    기상청 초단기·단기예보 · KMA Open API
+  </div>
+</div>
+
+
 <div id="page-check" class="page" style="display:none;">
   <div class="check-head">
     <div class="page-title">🎒 라운드 준비물</div>
@@ -391,6 +449,27 @@ body{background:#000;color:var(--g7);font-family:'Apple SD Gothic Neo','Noto San
   <div class="check-subdesc">자주 깜빡하는 순서로 정렬했습니다. 챙긴 항목을 눌러 체크하세요.</div>
   <div id="check-progress-wrap"><div id="check-progress"></div></div>
   <div id="check-grid"></div>
+</div>
+
+<!-- ══ 레이더 페이지 ══ -->
+<div id="page-radar" class="page" style="display:none;">
+  <div id="radar-header">
+    <div id="radar-title">🛰️ 강수 레이더</div>
+    <div id="radar-time-label">—</div>
+  </div>
+  <div id="radar-canvas-wrap">
+    <img id="radar-canvas" alt="레이더 영상">
+    <div id="radar-my-pos"></div>
+    <div id="radar-loading">
+      <div class="r-loader"></div>
+      <p>레이더 영상 불러오는 중…</p>
+    </div>
+  </div>
+  <div id="radar-controls">
+    <button id="radar-play-btn">▶</button>
+    <input id="radar-slider" type="range" min="0" value="0">
+    <div id="radar-frame-label">0/0</div>
+  </div>
 </div>
 
 <!-- ══ 설정 페이지 ══ -->
@@ -411,8 +490,11 @@ body{background:#000;color:var(--g7);font-family:'Apple SD Gothic Neo','Noto San
 
 <!-- 탭바 -->
 <div id="tab-bar">
-  <button class="tab-btn active" data-target="main">
-    <span class="tab-icon">🗺️</span><span>레이더</span>
+  <button class="tab-btn active" data-target="page-radar">
+    <span class="tab-icon">🛰️</span><span>레이더</span>
+  </button>
+  <button class="tab-btn" data-target="page-weather-tab">
+    <span class="tab-icon">🌤️</span><span>날씨</span>
   </button>
   <button class="tab-btn" id="tab-check" data-target="page-check">
     <span class="tab-icon">🎒</span><span>준비물</span>
@@ -526,25 +608,21 @@ async function fetchWeekly(nx,ny){
 }
 
 /* ── UI 렌더 ── */
-function renderUI(items,name){
+function renderUI(items, vilageItems, name){
   const now=new Date(),p=n=>String(n).padStart(2,'0');
-  document.getElementById('detail-loc').textContent=name;
   document.getElementById('location-name').textContent=name;
   document.getElementById('update-time').textContent=`${p(now.getHours())}:${p(now.getMinutes())} 기준`;
 
+  // 초단기 + 단기 합산
   const byTime={};
-  for(const it of items){const k=it.fcstDate+it.fcstTime;if(!byTime[k])byTime[k]={};byTime[k][it.category]=it.fcstValue;}
+  const allItems=[...(items||[]),...(vilageItems||[])];
+  for(const it of allItems){const k=it.fcstDate+it.fcstTime;if(!byTime[k])byTime[k]={};byTime[k][it.category]=it.fcstValue;}
   const times=Object.keys(byTime).sort();
   const nowKey=`${items[0]?.fcstDate}${p(now.getHours())}00`;
   const curKey=times.find(k=>k>=nowKey)||times[0];
   const cur=byTime[curKey]||{};
 
   const grade=golfGrade(cur);
-  // 지도 위 미니 뱃지
-  document.getElementById('mini-grade').textContent=grade.label;
-  document.getElementById('mini-sub').textContent=grade.sub.split('|')[0].trim();
-  document.getElementById('mini-temp').textContent=`${cur['T1H']||'—'}°`;
-
   // 패널 골프카드
   const top=document.getElementById('golf-card-top');
   top.className=grade.cls;
@@ -563,31 +641,37 @@ function renderUI(items,name){
   document.getElementById('card-wsd').className='m-card'+(wsd>=10?' alert-wind':'');
   document.getElementById('card-rain').className='m-card'+(pty!=='0'?' alert-rain':'');
 
-  // 시간별 — 현재 포함 3시간 간격 7개
+  // 시간별 — 현재 포함 3시간 간격 7개 (초단기+단기 합산)
   const scroll=document.getElementById('hourly-scroll');
   scroll.innerHTML='';
-  const slots=[curKey];
-  for(const t of times){
-    if(slots.length>=7)break;
-    if(t<=curKey)continue;
-    const h=parseInt(t.slice(8,10));
-    if(h%3!==0)continue;
-    slots.push(t);
+
+  // curKey 기준으로 3시간 뒤씩 7개 시각 목록 생성
+  const targetSlots=[];
+  const baseDate=curKey.slice(0,8), baseHour=parseInt(curKey.slice(8,10));
+  for(let i=0;i<7;i++){
+    const totalH=baseHour+(i*3);
+    const d=new Date(parseInt(baseDate.slice(0,4)),parseInt(baseDate.slice(4,6))-1,parseInt(baseDate.slice(6,8)),totalH,0,0);
+    const p=n=>String(n).padStart(2,'0');
+    const k=`${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}${p(d.getHours())}00`;
+    targetSlots.push(k);
   }
-  for(const t of slots){
+
+  for(const t of targetSlots){
     const slot=byTime[t]||{};
     const isNow=t===curKey;
     const hh=t.slice(8,10);
-    const rain=slot['RN1']||'강수없음';
+    const rain=slot['RN1']||slot['PCP']||'강수없음';
     const rainVal=rain==='강수없음'?0:parseFloat(rain)||0;
     const pPty=slot['PTY']||'0';
+    const pSky=slot['SKY']||'1';
+    const temp=slot['T1H']||slot['TMP']||'—';
     let face='😀';
     if(slot['LGT']&&slot['LGT']!=='0')face='⚡';
     else if(rainVal>=5||pPty==='4')face='😭';
     else if(rainVal>=1||pPty!=='0')face='😕';
     const el=document.createElement('div');
     el.className='h-slot'+(isNow?' now':'');
-    el.innerHTML=`<div class="h-time">${isNow?'지금':hh+'시'}</div><div class="h-face">${face}</div><div class="h-temp">${slot['T1H']||'—'}°</div><div class="h-rain">${rainVal>0?rainVal+'mm':''}</div>`;
+    el.innerHTML=`<div class="h-time">${isNow?'지금':hh+'시'}</div><div class="h-face">${face}</div><div class="h-temp">${temp}°</div><div class="h-rain">${rainVal>0?rainVal+'mm':''}</div>`;
     scroll.appendChild(el);
   }
 }
@@ -620,15 +704,7 @@ function renderWeekly(items){
   }
 }
 
-/* ── Windy ── */
-let lastLat=37.0,lastLon=127.5,windyLoaded=false;
-function buildWindyUrl(lat,lon){
-  return`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&detailLat=${lat}&detailLon=${lon}&zoom=9&level=surface&overlay=rain&product=ecmwf&menu=&message=true&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=m%2Fs&metricTemp=%C2%B0C&radarRange=-1`;
-}
-function loadWindy(lat,lon){
-  document.getElementById('windy-frame').src=buildWindyUrl(lat,lon);
-  windyLoaded=true;
-}
+let lastLat=37.0,lastLon=127.5;
 
 /* ── 메인 흐름 ── */
 let selectedPlace=null;
@@ -649,10 +725,9 @@ async function loadWeather(){
       name=await reverseGeocode(lat,lon);
     }
     lastLat=lat;lastLon=lon;
-    loadWindy(lat,lon);
     const{nx,ny}=latLonToGrid(lat,lon);
     const[items,weeklyItems]=await Promise.all([fetchForecast(nx,ny),fetchWeekly(nx,ny)]);
-    renderUI(items,name);
+    renderUI(items, weeklyItems, name);
     renderWeekly(weeklyItems);
     hideOverlay();
     document.getElementById('refresh-btn').classList.remove('spinning');
@@ -668,27 +743,144 @@ async function loadWeather(){
 document.getElementById('refresh-btn').addEventListener('click',()=>{document.getElementById('refresh-btn').classList.add('spinning');loadWeather();});
 document.getElementById('retry-btn').addEventListener('click',loadWeather);
 
-/* ── 상세 패널 ── */
-const detailPanel=document.getElementById('detail-panel');
-function openDetail(){detailPanel.classList.add('open');}
-function closeDetail(){detailPanel.classList.remove('open');}
-document.getElementById('open-detail-btn').addEventListener('click',openDetail);
-document.getElementById('close-detail-btn').addEventListener('click',closeDetail);
-document.getElementById('detail-backdrop').addEventListener('click',closeDetail);
-
 /* ── 탭 전환 ── */
 let currentTarget='main';
+/* ── 탭 전환 ── */
+const PAGES=['page-radar','page-weather-tab','page-check','page-settings'];
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
     const target=btn.dataset.target;
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById('main-wrapper').style.display=target==='main'?'flex':'none';
-    ['page-check','page-settings'].forEach(id=>document.getElementById(id).style.display='none');
-    if(target!=='main')document.getElementById(target).style.display='flex';
-    currentTarget=target;
+    PAGES.forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.style.display=(id===target)?'flex':'none';
+    });
+    if(target==='page-radar'&&!radarLoaded)initRadar();
   });
 });
+
+/* ══ 레이더 애니메이션 ══ */
+// 기상청 중부권 합성 레이더 (CMP = 합성, HSR = 한반도+중부)
+// obs=ECHO, cmp=HSR, 중부권 zoom 좌표 고정
+const RADAR_REGION={
+  // 중부권 레이더 고정 범위 (기상청 격자 기준 위경도 근사)
+  lat_min:36.0, lat_max:38.5, lon_min:126.0, lon_max:129.5
+};
+
+let radarFrames=[];   // {time, url, img}
+let radarIndex=0;
+let radarPlaying=false;
+let radarTimer=null;
+let radarLoaded=false;
+
+function radarTimeStr(minsAgo){
+  const d=new Date(Date.now()-minsAgo*60000);
+  const p=n=>String(n).padStart(2,'0');
+  const m5=Math.floor(d.getMinutes()/5)*5;
+  return`${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}${p(d.getHours())}${p(m5)}`;
+}
+
+function buildRadarUrl(timeStr){
+  // 기상청 레이더영상 조회서비스 → Worker /radar 경유
+  return`${WORKER_URL}/radar?time=${timeStr}&cmp=HSR&obs=ECHO&dataType=image&zoom=4`;
+}
+
+async function preloadImage(url){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>res({ok:true,img});
+    img.onerror=()=>res({ok:false,img:null});
+    img.src=url;
+    setTimeout(()=>res({ok:false,img:null}),8000);
+  });
+}
+
+async function initRadar(){
+  radarLoaded=true;
+  const loading=document.getElementById('radar-loading');
+  loading.style.display='flex';
+
+  // 최근 60분치 5분 간격 = 12프레임 시도
+  const candidates=[];
+  for(let m=60;m>=5;m-=5)candidates.push(radarTimeStr(m));
+
+  radarFrames=[];
+  for(const t of candidates){
+    const url=buildRadarUrl(t);
+    const{ok,img}=await preloadImage(url);
+    if(ok)radarFrames.push({time:t,url,img});
+  }
+
+  loading.style.display='none';
+
+  if(!radarFrames.length){
+    loading.querySelector('p').textContent='레이더 영상을 불러오지 못했습니다.\n레이더영상 API 승인 여부를 확인해 주세요.';
+    loading.style.display='flex';
+    return;
+  }
+
+  // 슬라이더 설정
+  const slider=document.getElementById('radar-slider');
+  slider.max=radarFrames.length-1;
+  slider.value=radarFrames.length-1;
+  radarIndex=radarFrames.length-1;
+
+  showRadarFrame(radarIndex);
+  updateMyPos();
+}
+
+function showRadarFrame(idx){
+  if(!radarFrames.length)return;
+  idx=Math.max(0,Math.min(idx,radarFrames.length-1));
+  radarIndex=idx;
+  const frame=radarFrames[idx];
+  const canvas=document.getElementById('radar-canvas');
+  canvas.src=frame.url;
+
+  const t=frame.time;
+  document.getElementById('radar-time-label').textContent=
+    `${t.slice(4,6)}/${t.slice(6,8)} ${t.slice(8,10)}:${t.slice(10,12)}`;
+  document.getElementById('radar-slider').value=idx;
+  document.getElementById('radar-frame-label').textContent=
+    `${idx+1}/${radarFrames.length}`;
+}
+
+function radarPlay(){
+  radarPlaying=true;
+  document.getElementById('radar-play-btn').textContent='⏸';
+  radarTimer=setInterval(()=>{
+    const next=(radarIndex+1)%radarFrames.length;
+    showRadarFrame(next);
+  },600);
+}
+function radarPause(){
+  radarPlaying=false;
+  document.getElementById('radar-play-btn').textContent='▶';
+  clearInterval(radarTimer);
+}
+
+document.getElementById('radar-play-btn').addEventListener('click',()=>{
+  if(radarPlaying)radarPause();else radarPlay();
+});
+document.getElementById('radar-slider').addEventListener('input',e=>{
+  radarPause();
+  showRadarFrame(parseInt(e.target.value));
+});
+
+// 내 위치 점 표시 (레이더 이미지 좌표로 변환)
+function updateMyPos(){
+  const pos=document.getElementById('radar-my-pos');
+  const wrap=document.getElementById('radar-canvas-wrap');
+  if(!lastLat||!lastLon){pos.style.display='none';return;}
+  const{lat_min,lat_max,lon_min,lon_max}=RADAR_REGION;
+  const xPct=(lastLon-lon_min)/(lon_max-lon_min)*100;
+  const yPct=(1-(lastLat-lat_min)/(lat_max-lat_min))*100;
+  if(xPct<0||xPct>100||yPct<0||yPct>100){pos.style.display='none';return;}
+  pos.style.left=xPct+'%';
+  pos.style.top=yPct+'%';
+  pos.style.display='block';
+}
 
 /* ── 검색 ── */
 const FAV_KEY='golf_fav_v3';
@@ -775,6 +967,7 @@ applyMode();
 
 /* ── 시작 ── */
 loadWeather();
+initRadar();
 </script>
 </body>
 </html>
